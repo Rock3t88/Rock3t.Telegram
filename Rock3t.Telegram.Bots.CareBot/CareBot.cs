@@ -11,10 +11,10 @@ namespace Rock3t.Telegram.Bots.CareBot;
 
 public class CareBot : TelegramBotBase
 {
-    public List<long> AllowedGroupIds { get; set; }
+    public List<long> AllowedGroupIds { get; private set; }
     public List<long> AllowedChannelIds { get; set; }
-    public long AdminChannelId { get; }
-    public long FoyerChannelId { get; }
+    public long AdminChannelId { get; private set; }
+    public long FoyerChannelId { get; private set; }
 
     public List<Question> JoinQuestions { get; set; }
 
@@ -36,6 +36,7 @@ public class CareBot : TelegramBotBase
 
         AllowedGroupIds = new List<long>();
         AllowedChannelIds = new List<long>();
+    }
 
     public void Initialize()
     {
@@ -51,9 +52,8 @@ public class CareBot : TelegramBotBase
         AllowedChannelIds.Add(_options.Value.FoyerChannelId);
 
         IsInitialized = true;
-        var questions = File.ReadAllText(_DEBUG.QuestionsPath ?? "./config/questions.yml");
 
-        JoinQuestions = deserializer.Deserialize<List<Question>>(questions);
+        JoinQuestions = _options.Value.Questions;
 
         IsInitialized = true;
     }
