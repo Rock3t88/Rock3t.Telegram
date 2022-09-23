@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>80e982e1-06a3-4ad2-8923-0686053aec2c</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <AssemblyVersion>0.1.0.2</AssemblyVersion>
+    <FileVersion>0.1.0.2</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="config\wordlist - Copy.txt" />
+    <None Remove="gruppenregeln.txt" />
+    <None Remove="questions.yml" />
+    <None Remove="wordlist.txt" />
+    <None Remove="_DEBUG\gruppenregeln.txt" />
+    <None Remove="_DEBUG\questions.yml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="config\gruppenregeln.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\questions.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="_DEBUG\config\wordlist.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\wordlist.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="_DEBUG\config\gruppenregeln.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="_DEBUG\config\questions.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.15.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rock3t.Telegram.Bots.CareBot\Rock3t.Telegram.Bots.CareBot.csproj" />
+    <ProjectReference Include="..\Rock3t.Telegram.Lib\Rock3t.Telegram.Lib.csproj" />
+  </ItemGroup>
+
+</Project>
