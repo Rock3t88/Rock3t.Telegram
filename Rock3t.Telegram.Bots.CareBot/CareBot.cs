@@ -11,31 +11,47 @@ namespace Rock3t.Telegram.Bots.CareBot;
 
 public class CareBot : TelegramBotBase
 {
-    public List<long> AllowedGroupIds { get; set; }
-    public List<long> AllowedChannelIds { get; set; }
-    public long AdminChannelId { get; }
-    public long FoyerChannelId { get; }
+    public List<long> AllowedGroupIds { get; }
+    public List<long> AllowedChannelIds { get; }
+    public long AdminChannelId { get; private set; }
+    public long FoyerChannelId { get; private set; }
 
     public List<Question> JoinQuestions { get; set; }
 
-    private readonly Dictionary<long, NewMemberChat> _privateChats = new();
+    private readonly Dictionary<long, NewMemberChat> _privateChats;
+    private readonly IOptions<CareBotConfig> _options;
+
+    public bool IsInitialized { get; private set; }
 
     public CareBot(IOptions<CareBotConfig> options) : base(options.Value.Token)
     {
-        var deserializer = new Deserializer();
+        _options = options;
 
+        _privateChats = new();
+
+        AllowedGroupIds = new List<long>();
+        AllowedChannelIds = new List<long>();
+    }
+
+    public void Initialize()
+    {
+        _privateChats.Clear();
+
+        AdminChannelId = _options.Value.AdminChannelId;
+        FoyerChannelId = _options.Value.FoyerChannelId;
+
+        AllowedChannelIds.Clear();
+        AllowedGroupIds.Clear();
+
+        AllowedChannelIds.Add(_options.Value.AdminChannelId);
+        AllowedChannelIds.Add(_options.Value.FoyerChannelId);
+
+        var deserializer = new Deserializer();
         var questions = File.ReadAllText(_DEBUG.QuestionsPath ?? "./config/questions.yml");
 
         JoinQuestions = deserializer.Deserialize<List<Question>>(questions);
 
-        AllowedGroupIds = new List<long>();
-        AllowedChannelIds = new List<long>();
-
-        AdminChannelId = options.Value.AdminChannelId;
-        FoyerChannelId = options.Value.FoyerChannelId;
-
-        AllowedChannelIds.Add(options.Value.AdminChannelId);
-        AllowedChannelIds.Add(options.Value.FoyerChannelId);
+        IsInitialized = true;
     }
 
     protected override async Task OnUpdate(Update update)
