@@ -11,15 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="config\wordlist - Copy.txt" />
-    <None Remove="gruppenregeln.txt" />
-    <None Remove="questions.yml" />
-    <None Remove="wordlist.txt" />
-    <None Remove="_DEBUG\gruppenregeln.txt" />
-    <None Remove="_DEBUG\questions.yml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="_DEBUG\config\wordlist.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

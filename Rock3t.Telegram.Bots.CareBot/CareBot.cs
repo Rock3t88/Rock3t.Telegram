@@ -21,11 +21,16 @@ public class CareBot : TelegramBotBase
     private readonly Dictionary<long, NewMemberChat> _privateChats;
     private readonly IOptions<CareBotConfig> _options;
 
+    internal CareBotConfig Config { get; }
+
     public bool IsInitialized { get; private set; }
 
     public CareBot(IOptions<CareBotConfig> options) : base(options.Value.Token)
     {
         _options = options;
+        Config = options.Value;
+
+        JoinQuestions = options.Value.Questions;
 
         _privateChats = new();
 
