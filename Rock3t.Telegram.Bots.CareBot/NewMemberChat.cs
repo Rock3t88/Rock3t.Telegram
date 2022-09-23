@@ -95,7 +95,7 @@ public class NewMemberChat
                         await _careBot.SendTextMessageAsync(
                             update.Message.Chat.Id,
                             "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
-                            "durch die deine Aufnahme höchstwahrscheinlich noch schneller gehen wird.\r\n\r\nDu musst aber natürlich auf keine der Fragen antworten, wenn du das nicht möchtest. " +
+                            "durch die deine Aufnahme noch schneller durchgeführt werden kann.\r\n\r\nDu musst aber natürlich auf keine der Fragen antworten, wenn du das nicht möchtest. " +
                             "Schreibe in diesem Fall einfach irgendetwas in den Chat, z.B. _keine Angabe_ oder _ka_.\r\n\r\n" +
                             "*Beachte: Orga-Mitglieder können deine Antworten maximal 7 Tage lang sehen, danach werden sie automatisch gelöscht.*",
                             ParseMode.Markdown);
@@ -243,11 +243,12 @@ public class NewMemberChat
             "dass nur die eine Person deine Nachrichten lesen kann, mit der du schreibst. " +
             "\r\n\r\n" +
             "Nunja, vermutlich hast du es bereits an meinem Namen erkannt. Ich bin ein Bot. Das heißt, " +
-            "dass theoretisch mindestens die EntwicklerInnen die Nahrichten aus diesem Chat mitlesen könnten, " +
-            "wenn sie wollten. Da bei uns aber auch *Datenschutz* großgeschrieben wird, ist das in diesem Moment " +
-            "nicht der Fall." +
+            "dass mindestens die EntwicklerInnen die Nachrichten aus diesem Chat mitlesen könnten, " +
+            "wenn sie wollten. Da bei uns *Datenschutz* großgeschrieben wird, werden deine Nachrichten daher erst weitergeleitet " +
+            "sobald du deine Zustimmung dazu gegeben hast.\r\n" +
+            "_Um Transparenz und Datenschutz zu wahren, besteht sogar die Möglichkeit in meinen Quellcode zu schauen: https://github.com/Rock3t88/Rock3t.Telegram/_" +
             "\r\n\r\n" +
-            "Da das aber nötig ist, um deine Gruppenaufnahme durchzuführen, bitte ich dich nun zu *Bestätigen, " +
+            "Um deine Gruppenaufnahme durchführen zu können, bitte ich dich nun zu *Bestätigen, " +
             "dass du diese Information verstanden hast und damit einverstanden bist, dass die Orga-Mitglieder von CG/L - NRW " +
             "über dein Interesse an der Gruppenaufnahme informiert werden und Zugriff auf die Nachrichten bekommen, " +
             "die du in diesem Chat mit mir schreibst.*");
