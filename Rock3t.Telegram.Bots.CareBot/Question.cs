@@ -3,6 +3,7 @@
 public class Question
 {
     public string Text { get; set; } = null!;
+
     public List<AnswerOption> AnswerOptions { get; set; }
 
     public Question()

@@ -180,8 +180,17 @@ public class NewMemberChat
 
         SetSecret(word);
 
-        var groupRules = File.ReadAllText(_DEBUG.GroupRulesPath ?? "./config/gruppenregeln.txt");
-        groupRules = string.Format(groupRules, word);
+        StringBuilder groupRulesBuilder = new StringBuilder();
+        groupRulesBuilder.AppendLine("*Gruppenregeln*");
+        groupRulesBuilder.AppendLine();
+
+        foreach (var rule in _careBot.Config.GroupRules)
+        {
+            groupRulesBuilder.AppendLine();
+            groupRulesBuilder.AppendLine(rule);
+        }
+
+        string groupRules = groupRulesBuilder.ToString().Replace("{secret}", word);
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, groupRules, ParseMode.Markdown);
 

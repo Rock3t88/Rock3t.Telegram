@@ -18,24 +18,44 @@ public class CareBot : TelegramBotBase
 
     public List<Question> JoinQuestions { get; set; }
 
-    private readonly Dictionary<long, NewMemberChat> _privateChats = new();
+    private readonly Dictionary<long, NewMemberChat> _privateChats;
+    private readonly IOptions<CareBotConfig> _options;
+
+    internal CareBotConfig Config { get; }
+
+    public bool IsInitialized { get; private set; }
 
     public CareBot(IOptions<CareBotConfig> options) : base(options.Value.Token)
     {
-        var deserializer = new Deserializer();
+        _options = options;
+        Config = options.Value;
 
-        var questions = File.ReadAllText(_DEBUG.QuestionsPath ?? "./config/questions.yml");
+        JoinQuestions = options.Value.Questions;
 
-        JoinQuestions = deserializer.Deserialize<List<Question>>(questions);
+        _privateChats = new();
 
         AllowedGroupIds = new List<long>();
         AllowedChannelIds = new List<long>();
 
-        AdminChannelId = options.Value.AdminChannelId;
-        FoyerChannelId = options.Value.FoyerChannelId;
+    public void Initialize()
+    {
+        _privateChats.Clear();
 
-        AllowedChannelIds.Add(options.Value.AdminChannelId);
-        AllowedChannelIds.Add(options.Value.FoyerChannelId);
+        AdminChannelId = _options.Value.AdminChannelId;
+        FoyerChannelId = _options.Value.FoyerChannelId;
+
+        AllowedChannelIds.Clear();
+        AllowedGroupIds.Clear();
+
+        AllowedChannelIds.Add(_options.Value.AdminChannelId);
+        AllowedChannelIds.Add(_options.Value.FoyerChannelId);
+
+        IsInitialized = true;
+        var questions = File.ReadAllText(_DEBUG.QuestionsPath ?? "./config/questions.yml");
+
+        JoinQuestions = deserializer.Deserialize<List<Question>>(questions);
+
+        IsInitialized = true;
     }
 
     protected override async Task OnUpdate(Update update)

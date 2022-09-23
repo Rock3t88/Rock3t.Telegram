@@ -11,31 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="config\wordlist - Copy.txt" />
-    <None Remove="gruppenregeln.txt" />
-    <None Remove="questions.yml" />
-    <None Remove="wordlist.txt" />
-    <None Remove="_DEBUG\gruppenregeln.txt" />
-    <None Remove="_DEBUG\questions.yml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="config\gruppenregeln.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="config\questions.yml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="_DEBUG\config\wordlist.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="config\wordlist.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="_DEBUG\config\gruppenregeln.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="_DEBUG\config\questions.yml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
