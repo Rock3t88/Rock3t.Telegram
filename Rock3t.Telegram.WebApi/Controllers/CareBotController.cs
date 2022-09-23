@@ -7,8 +7,6 @@ namespace Rock3t.Telegram.WebApi.Controllers;
 [Route("[controller]")]
 public class CareBotController : ControllerBase
 {
-    private CancellationTokenSource _cancellationTokenSource;
-
     private readonly ILogger<CareBotController> _logger = null!;
     private readonly IConfiguration _config = null!;
 
@@ -31,18 +29,69 @@ public class CareBotController : ControllerBase
         return careBot;
     }
 
-    [HttpGet("/start")]
+    [HttpGet("start")]
     public bool Start()
     {
-        var careBot = App.Host.Services.GetRequiredService<CareBot>();
-        _careBotTask = careBot.RunAsync();
-        return true;
+        try
+        {
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+
+            if (careBot.IsRunning)
+                throw new InvalidOperationException("CareBot is already running.");
+
+            careBot.Initialize();
+            _careBotTask = careBot.RunAsync();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            return false;
+        }
     }
 
-    [HttpGet("/stop")]
+    [HttpGet("stop")]
     public bool Stop()
     {
-        _cancellationTokenSource.Cancel();
-        return true;
+        try
+        {
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+
+            if (!careBot.IsRunning)
+                throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
+
+            careBot.Stop();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            return false;
+        }
+    }
+
+    [HttpGet("reinitialize")]
+    public bool Reinitialize()
+    {
+        try
+        {
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+
+            if (!careBot.IsRunning)
+                throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
+
+            careBot.Stop();
+            careBot.Initialize();
+            _careBotTask = careBot.RunAsync();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            return false;
+        }
     }
 }

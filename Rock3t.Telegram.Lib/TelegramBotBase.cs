@@ -150,6 +150,12 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBotBase
         await this.ReceiveAsync(OnUpdate, PollingErrorHandler, cancellationToken: _cancellationToken);
     }
 
+    public void Stop()
+    {
+        _cancellationTokenSource.Cancel();
+        IsRunning = false;
+    }
+
     private async Task OnUpdate(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         GameManager.RunningGames.ForEach(instance => instance.Game.DoUpdates(update));
