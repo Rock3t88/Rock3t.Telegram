@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
-using Rock3t.Telegram.Lib;
+﻿using Rock3t.Telegram.Lib;
 
-namespace Rock3t.Telegram.Test.Console;
+namespace Rock3t.Telegram.WebApi;
 
 public class BotManager
 {
