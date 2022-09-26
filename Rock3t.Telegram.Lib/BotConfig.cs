@@ -6,6 +6,8 @@ public interface IBotConfig
     string Token { get; set; }
     long AdminChannelId { get; set; }
     long FoyerChannelId { get; set; }
+    bool ClearUpdatesOnStart { get; set; }
+    List<string> AdminUsers { get; set; }
 }
 
 public class BotConfig : IBotConfig
@@ -22,6 +24,8 @@ public class BotConfig : IBotConfig
         }
     }
 
+    public bool ClearUpdatesOnStart { get; set; }
+    public List<string> AdminUsers { get; set; }
     public string Token { get; set; }
     public long AdminChannelId { get; set; }
     public long FoyerChannelId { get; set; }

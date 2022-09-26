@@ -9,8 +9,10 @@ var host = Host.CreateDefaultBuilder(args)
     {
         var path = _DEBUG.ConfigPath ?? "./config/appsettings.json";
 
+#if DEBUG
         Console.WriteLine("config path: " + path);
-        
+#endif
+
         builder.AddJsonFile(path, false, true);
     })
     .Build();

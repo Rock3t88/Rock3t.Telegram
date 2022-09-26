@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,5 +6,38 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="_DEBUG\config\appsettings.Development.json" />
+    <None Remove="_DEBUG\config\appsettings.json" />
+    <None Remove="_DEBUG\config\wordlist.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="_DEBUG\config\appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="_DEBUG\config\appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="_DEBUG\config\wordlist.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+		<PackageReference Include="Serilog" Version="2.12.0" />
+	</ItemGroup>
+
+  <ItemGroup>
+	  <ProjectReference Include="..\Rock3t.Telegram.Bots.CareBot\Rock3t.Telegram.Bots.CareBot.csproj" />
+	  <ProjectReference Include="..\Rock3t.Telegram.Bots.ScaryTerry\Rock3t.Telegram.Bots.ScaryTerry.csproj" />
+	  <ProjectReference Include="..\Rock3t.Telegram.Lib\Rock3t.Telegram.Lib.csproj" />
+  </ItemGroup>
 
 </Project>

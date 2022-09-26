@@ -16,6 +16,7 @@ public class Helper
 
     }
 
+
     public string ReplaceTokens(string input, Dictionary<string, object?>? dict)
     {
         string output = input;

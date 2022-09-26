@@ -1,11 +1,14 @@
 ﻿using Akinator.Api.Net.Enumerations;
+using Microsoft.Extensions.Logging;
 using Rock3t.Telegram.Lib.Akinator;
+using Serilog;
 using Telegram.Bot.Types;
 
 namespace Rock3t.Telegram.Lib;
 
 public class AkinatorGame : IGame<ScaryAkinator>
 {
+    private readonly ILogger<AkinatorGame> _logger;
     public Dictionary<AnswerOptions, string[]> PossibleAnswers { get; }
 
     public event EventHandler<IGame>? GameExited;
@@ -21,8 +24,9 @@ public class AkinatorGame : IGame<ScaryAkinator>
 
     public User Player { get; set; }
 
-    private AkinatorGame()
+    private AkinatorGame(ILogger<AkinatorGame> logger)
     {
+        _logger = logger;
     }
 
     public AkinatorGame(TelegramBot bot)
@@ -113,6 +117,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
                 Model.ResetGuess();
                 var message = Model.CurrentQuestion.Text;
                 await Bot.SendMessage(update.Message.Chat.Id, message);
+
                 return;
             }
             else
