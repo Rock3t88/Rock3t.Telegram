@@ -21,33 +21,25 @@ var host = Host.CreateDefaultBuilder(args)
 #endif
 
         builder.AddJsonFile(path, false, true);
-
     }).ConfigureServices((context, services) =>
     {
-        //services.AddSingleton<ScaryTerryBot>();
-        services.AddSingleton<CareBot>();
+        //services.AddSingleton<ScaryTerryBotBase>();
+        services.AddSingleton<CareBotBase>();
 
         foreach (var botConfig in context.Configuration.GetSection("Bots").GetChildren())
         {
             var name = botConfig.GetSection("Name").Value;
 
             if (name.ToLower().Equals("scaryterry"))
-            {
                 services.Configure<ScaryTerryConfig>(botConfig);
-            }
             else if (name.ToLower().Equals("carebot"))
-            {
                 services.Configure<CareBotConfig>(botConfig);
-            }
             else
-            {
                 services.Configure<BotConfig>(botConfig);
-            }
         }
     })
     .Build();
 
 App.Host = host;
-var careBot = host.Services.GetRequiredService<CareBot>();
+var careBot = host.Services.GetRequiredService<CareBotBase>();
 await careBot.RunAsync();
-

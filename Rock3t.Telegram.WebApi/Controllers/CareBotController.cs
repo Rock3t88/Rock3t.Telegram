@@ -23,9 +23,9 @@ public class CareBotController : ControllerBase
     }
 
     [HttpGet("")]
-    public CareBot Get()
+    public CareBotBase Get()
     {
-        var careBot = App.Host.Services.GetRequiredService<CareBot>();
+        var careBot = App.Host.Services.GetRequiredService<CareBotBase>();
         return careBot;
     }
 
@@ -34,10 +34,10 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBotBase>();
 
             if (careBot.IsRunning)
-                throw new InvalidOperationException("CareBot is already running.");
+                throw new InvalidOperationException("CareBotBase is already running.");
 
             careBot.Initialize();
             _careBotTask = careBot.RunAsync();
@@ -56,10 +56,10 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBotBase>();
 
             if (!careBot.IsRunning)
-                throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
+                throw new InvalidOperationException($"{nameof(Stop)} - CareBotBase is not running!");
 
             careBot.Stop();
 
@@ -77,15 +77,15 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBotBase>();
 
             if (!careBot.IsRunning)
-                throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
+                throw new InvalidOperationException($"{nameof(Stop)} - CareBotBase is not running!");
 
             careBot.Stop();
             careBot.Initialize();
             _careBotTask = careBot.RunAsync();
-            
+
             return true;
         }
         catch (Exception ex)

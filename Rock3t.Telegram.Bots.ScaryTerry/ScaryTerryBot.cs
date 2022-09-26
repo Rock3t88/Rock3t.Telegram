@@ -10,10 +10,10 @@ using Action = Rock3t.Telegram.Bots.ScaryTerry.Config.Action;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry;
 
-public class ScaryTerryBot : TelegramBot
+public class ScaryTerryBotBase : TelegramBotBase
 {
     private readonly Random _random = Random.Shared;
-    private readonly ILogger<ScaryTerryBot> _logger;
+    private readonly ILogger<ScaryTerryBotBase> _logger;
     private readonly List<Action> _actions;
     private readonly List<Action> _randomActions;
     private readonly List<string> _welcomeMessages;
@@ -30,12 +30,13 @@ public class ScaryTerryBot : TelegramBot
 
     private readonly Dictionary<long, string> _chatIdToService = new();
 
-    public ScaryTerryBot(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBot> logger) : base(options.Value.Token)
+    public ScaryTerryBotBase(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBotBase> logger) : base(options.Value
+        .Token)
     {
         _ha = new HomeAssistantWrapper(this);
         _logger = logger;
         _options = options;
-        _helper = new();
+        _helper = new Helper();
         _randomActions = new List<Action>(Config.RandomActions);
 
         _db = new ScaryTerryDb();
@@ -59,26 +60,21 @@ public class ScaryTerryBot : TelegramBot
             _logger.LogInformation("{0} ({1})", user.Name, user.UserId);
         }
 
-        foreach (Token item in Config.Tokens)
-        {
-            _helper.AddToken(item.Key, item.Value);
-        }
+        foreach (var item in Config.Tokens) _helper.AddToken(item.Key, item.Value);
 
         _actions = Config.Actions;
 
         _helper.AddToken(nameof(Config.MainChatId).ToLower(), Config.MainChatId);
         _helper.AddToken("botname", Config.Name);
 
-        foreach (Notifier notifier in Config.Notifiers)
-        {
+        foreach (var notifier in Config.Notifiers)
             if (!_chatIdToService.ContainsKey(notifier.Id))
                 _chatIdToService.Add(notifier.Id, notifier.Name);
-        }
 
         _logger.LogInformation("Registered random events: {0}", Config.RandomActions.Count);
 
         GameManager.Games.Add(typeof(AkinatorGame));
-        
+
         LogConfiguration();
     }
 
@@ -91,19 +87,19 @@ public class ScaryTerryBot : TelegramBot
     {
         try
         {
-            _temporaryTokens = new();
-            string notifierService = _chatIdToService[Config.MainChatId];
+            _temporaryTokens = new Dictionary<string, object?>();
+            var notifierService = _chatIdToService[Config.MainChatId];
 
-            string botname = Config.Name;
-            string to = "";
-            Config.Action? action = null;
+            var botname = Config.Name;
+            var to = "";
+            Action? action = null;
             TelegramText? telegramText = null;
             TelegramUser? currentUser = null;
             TelegramCommand? telegramCommand = null;
 
-            bool isRandomAction = false;
+            var isRandomAction = false;
 
-            string? text = update.Message?.Text;
+            var text = update.Message?.Text;
 
             if (text?.StartsWith("/") == true)
             {
@@ -140,45 +136,40 @@ public class ScaryTerryBot : TelegramBot
 
                 if (telegramCommand.command.ToLower().Equals(Config.AddWelcomeMessageCommand.ToLower()))
                 {
-                    string cmdValue = telegramCommand.command.ToLower();
+                    var cmdValue = telegramCommand.command.ToLower();
 
-                    int messageIndex = cmdValue.IndexOf(Config.AddWelcomeMessageCommand.ToLower(),
+                    var messageIndex = cmdValue.IndexOf(Config.AddWelcomeMessageCommand.ToLower(),
                         StringComparison.Ordinal);
 
                     if (messageIndex >= cmdValue.Length)
                         return;
 
-                    string message2Insert = cmdValue.Substring(messageIndex + 1);
+                    var message2Insert = cmdValue.Substring(messageIndex + 1);
 
                     _db.AddWelcomeMessage(message2Insert);
                     return;
                 }
 
-                Regex regex = new Regex(@$"((\/.*)\@{Config.Name})");
+                var regex = new Regex(@$"((\/.*)\@{Config.Name})");
 
-                Match match = regex.Match(telegramCommand.command);
+                var match = regex.Match(telegramCommand.command);
 
                 _logger.LogInformation("Command received: {0}", telegramCommand.command);
 
                 string strAction = null;
 
-                if (match.Success)
-                {
-                    strAction = match.Value.Substring(0, match.Value.IndexOf('@'));
-                }
+                if (match.Success) strAction = match.Value.Substring(0, match.Value.IndexOf('@'));
 
                 _logger.LogInformation("Extracted action: {0}", strAction);
 
                 isRandomAction = strAction?.ToLower().Equals(Config.RandomCommand.ToLower()) == true;
 
                 if (isRandomAction && _randomActions.Count == 0 && Config.RandomActions.Count > 0)
-                {
                     _randomActions.AddRange(Config.RandomActions);
-                }
 
                 if (isRandomAction && _randomActions.Count > 0)
                 {
-                    int rnd = _random.Next(0, _randomActions.Count);
+                    var rnd = _random.Next(0, _randomActions.Count);
                     action = _randomActions[rnd];
 
                     _logger.LogInformation("Random action no {0} triggered: {1}", rnd, action.Name);
@@ -248,15 +239,13 @@ public class ScaryTerryBot : TelegramBot
                         AddTemporaryToken("currentusername", currentUser.Name);
 
                         if (_randomWelcomeMessages.Count == 0 && _welcomeMessages.Count > 0)
-                        {
                             _randomWelcomeMessages.AddRange(_welcomeMessages);
-                        }
 
-                        string welcomeMessage = Config.DefaultWelcomeMessage;
+                        var welcomeMessage = Config.DefaultWelcomeMessage;
 
                         if (_randomWelcomeMessages.Count > 0)
                         {
-                            int rnd = _random.Next(0, _randomWelcomeMessages.Count);
+                            var rnd = _random.Next(0, _randomWelcomeMessages.Count);
                             welcomeMessage = _randomWelcomeMessages[rnd];
 
                             _logger.LogInformation("Welcome message no {0} triggered.", rnd);
@@ -264,7 +253,7 @@ public class ScaryTerryBot : TelegramBot
 
 
                         _ha.CallService(ServicesTypes.send_message,
-                            data: new()
+                            new MessageData
                             {
                                 message = _helper.ReplaceTokens(string.Format(welcomeMessage, currentUser?.Name),
                                     _temporaryTokens),
@@ -283,12 +272,12 @@ public class ScaryTerryBot : TelegramBot
                         _randomWelcomeMessages.Remove(welcomeMessage);
                         _db.AddWelcomeMessage(welcomeMessage, true);
 
-                        string logMessage = "Neuer Gast: {0} ({1})";
+                        var logMessage = "Neuer Gast: {0} ({1})";
                         _logger.LogWarning(logMessage, newUser.Name, newUser.UserId);
 
                         _ha.CallService(
                             ServicesTypes.notify,
-                            data: new()
+                            new MessageData
                             {
                                 message = string.Format(logMessage, newUser.Name, newUser.UserId), title = "Scary Terry"
                             });
@@ -337,13 +326,11 @@ public class ScaryTerryBot : TelegramBot
 
                 if (action == null)
                 {
-                    int rnd = _random.Next(0, _randomActions.Count);
+                    var rnd = _random.Next(0, _randomActions.Count);
                     action = _randomActions[rnd];
 
                     if (_randomActions.Count == 0 && Config.RandomActions.Count > 0)
-                    {
                         _randomActions.AddRange(Config.RandomActions);
-                    }
 
                     TriggerAction(action, telegramText.chat_id, notifierService, true, currentUser, to);
 
@@ -362,86 +349,68 @@ public class ScaryTerryBot : TelegramBot
         {
             _logger.LogError(ex.Message);
         }
-        
+
         await base.OnUpdate(update);
     }
 
     private void LogConfiguration()
     {
         _logger.LogInformation("Configuration:");
-        _logger.LogInformation("Bot.Name: {0}, MainChatId: {1}", Config.Name, Config.MainChatId);
+        _logger.LogInformation("BotBase.Name: {0}, MainChatId: {1}", Config.Name, Config.MainChatId);
 
         foreach (var notifier in Config.Notifiers)
-        {
             _logger.LogInformation("Notifier {0}: {1}", notifier.Name, notifier.Id);
-        }
 
-        foreach (var token in Config.Tokens)
-        {
-            _logger.LogInformation("Token {0}: {1}", token.Key, token.Value);
-        }
+        foreach (var token in Config.Tokens) _logger.LogInformation("Token {0}: {1}", token.Key, token.Value);
 
-        foreach (Action action in Config.Actions)
-        {
+        foreach (var action in Config.Actions)
             _logger.LogInformation("Config.Action {0}: {1}{2}{3}",
                 action.Name, action?.MessageService?.Message,
                 action?.SceneService?.Scene, action?.AudioService?.Url);
-        }
 
-        foreach (Action action in Config.RandomActions)
-        {
+        foreach (var action in Config.RandomActions)
             _logger.LogInformation("Random Config.Action {0}: {1}{2}{3}",
                 action.Name, action?.MessageService?.Message,
                 action?.SceneService?.Scene, action?.AudioService?.Url);
-        }
 
-        foreach (var message in Config.WelcomeMessages)
-        {
-            _logger.LogInformation("Message: {0}", message);
-        }
+        foreach (var message in Config.WelcomeMessages) _logger.LogInformation("Message: {0}", message);
     }
 
     private string GetTo(string text, string botname)
     {
-        string to = "";
+        var to = "";
 
-        if (text.Contains('@'))
-        {
-            to = Regex.Match(text, @"(?!\@" + botname + @")\@[^\s]+").Value;
-        }
+        if (text.Contains('@')) to = Regex.Match(text, @"(?!\@" + botname + @")\@[^\s]+").Value;
 
         AddTemporaryToken("to", to);
         return to;
     }
 
-    private Config.Action? GetAction(string? strAction)
+    private Action? GetAction(string? strAction)
     {
         if (strAction == null)
             return null;
 
-        Config.Action? action = _actions.FirstOrDefault(cmd => cmd.Name.ToLower().Equals(strAction.ToLower()));
+        var action = _actions.FirstOrDefault(cmd => cmd.Name.ToLower().Equals(strAction.ToLower()));
 
         return action;
     }
 
-    private Config.Action? GetInlineCommandAction(string text)
+    private Action? GetInlineCommandAction(string text)
     {
-        Config.Action action = null;
+        Action action = null;
         string srtAction = null;
-        string cmd = text;
+        var cmd = text;
 
         if (!cmd.StartsWith("-"))
             cmd = cmd.Insert(0, "-");
 
-        foreach (Action item in _actions)
+        foreach (var item in _actions)
         {
             srtAction = Regex.Match(cmd, item.Name, RegexOptions.IgnoreCase).Value.ToLower();
             srtAction = _helper.ReplaceTokens(srtAction, _temporaryTokens);
 
-            if (!string.IsNullOrWhiteSpace(srtAction))
-            {
-                action = item;
-            }
+            if (!string.IsNullOrWhiteSpace(srtAction)) action = item;
         }
 
         return action;
@@ -453,33 +422,27 @@ public class ScaryTerryBot : TelegramBot
             _temporaryTokens.Add(key.ToLower(), value);
     }
 
-    private async void TriggerAction(Action action, long chatId, string notifierService, bool isRandomAction, TelegramUser currentUser, string? to = null)
+    private async void TriggerAction(Action action, long chatId, string notifierService, bool isRandomAction,
+        TelegramUser currentUser, string? to = null)
     {
         if (action.SceneService != null && !string.IsNullOrWhiteSpace(action.SceneService.Scene))
-        {
             _ha.CallService(ServicesTypes.scene,
-                data: new() { entity_id = _helper.ReplaceTokens(action.SceneService.Scene, _temporaryTokens) });
-        }
+                new MessageData { entity_id = _helper.ReplaceTokens(action.SceneService.Scene, _temporaryTokens) });
         if (action.AudioService != null && !string.IsNullOrWhiteSpace(action.AudioService.Url))
-        {
             _ha.CallService(ServicesTypes.send_voice,
-                data: new()
+                new MessageData
                 {
                     url = _helper.ReplaceTokens(action.AudioService.Url, _temporaryTokens),
                     target = chatId
                 });
-        }
         if (action.MessageService != null && !string.IsNullOrWhiteSpace(action.MessageService.Message))
         {
-            string message = action.MessageService.Message;
+            var message = action.MessageService.Message;
 
-            if (!string.IsNullOrWhiteSpace(to))
-            {
-                message = message.Insert(0, $"{to} ");
-            }
+            if (!string.IsNullOrWhiteSpace(to)) message = message.Insert(0, $"{to} ");
 
             _ha.CallService(ServicesTypes.send_message,
-                data: new()
+                new MessageData
                 {
                     message = _helper.ReplaceTokens(message, _temporaryTokens),
                     target = chatId
@@ -490,10 +453,7 @@ public class ScaryTerryBot : TelegramBot
             //});
         }
 
-        if (isRandomAction)
-        {
-            _randomActions.Remove(action);
-        }
+        if (isRandomAction) _randomActions.Remove(action);
     }
 
     public override string ToString()
@@ -501,4 +461,3 @@ public class ScaryTerryBot : TelegramBot
         return Config.Name;
     }
 }
-

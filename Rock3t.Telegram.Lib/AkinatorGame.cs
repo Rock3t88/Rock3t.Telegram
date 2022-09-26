@@ -12,7 +12,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
     public Dictionary<AnswerOptions, string[]> PossibleAnswers { get; }
 
     public event EventHandler<IGame>? GameExited;
-    public TelegramBot Bot { get; }
+    public TelegramBotBase BotBase { get; }
     public Message? LastMessage { get; set; }
     public Message? LastAnswer { get; set; }
     public bool Completed { get; private set; }
@@ -29,7 +29,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
         _logger = logger;
     }
 
-    public AkinatorGame(TelegramBot bot)
+    public AkinatorGame(TelegramBotBase botBase)
     {
         PossibleAnswers = new Dictionary<AnswerOptions, string[]>();
 
@@ -77,7 +77,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
             "nope"
         });
 
-        Bot = bot;
+        BotBase = botBase;
     }
 
     private AnswerOptions GetAnswerOption(string message)
@@ -109,14 +109,14 @@ public class AkinatorGame : IGame<ScaryAkinator>
             {
                 Completed = true;
                 var message = Model.GetGuess().Result.FirstOrDefault()?.PhotoPath?.ToString() ?? "YEAAHH!!!";
-                await Bot.SendMessage(update.Message.Chat.Id, message);
+                await BotBase.SendMessage(update.Message.Chat.Id, message);
                 return;
             }
             else if (answerOption.Equals(AnswerOptions.No))
             {
                 Model.ResetGuess();
                 var message = Model.CurrentQuestion.Text;
-                await Bot.SendMessage(update.Message.Chat.Id, message);
+                await BotBase.SendMessage(update.Message.Chat.Id, message);
 
                 return;
             }
@@ -130,7 +130,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
         if (Model.GetGuessIsDue())
         {
             messageCallback = $"Ist es {Model.GetGuess().Result.FirstOrDefault()?.Name} ?";
-            await Bot.SendMessage(update.Message.Chat.Id, messageCallback);
+            await BotBase.SendMessage(update.Message.Chat.Id, messageCallback);
             return;
         }
 
@@ -139,49 +139,49 @@ public class AkinatorGame : IGame<ScaryAkinator>
 
         var newQuestion = await Model.Answer(answerOption);
         messageCallback = newQuestion?.Text;
-        await Bot.SendMessage(update.Message.Chat.Id, messageCallback);
+        await BotBase.SendMessage(update.Message.Chat.Id, messageCallback);
 
         //if (answerOption.Equals(AnswerOptions.Yes))
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.Yes);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
         //else if (answerOption.Equals(AnswerOptions.No))
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.No);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
         //else if (answerOption.Equals(AnswerOptions.Probably))
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.Probably);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
         //else if (answerText.Contains("wahrscheinlich nein"))
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.ProbablyNot);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
         //else if (answerText.Contains("keine ahnung"))
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.DontKnow);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
         //else
         //{
         //    var newQuestion = await Model.Answer(AnswerOptions.Unknown);
         //    var message = newQuestion?.Text;
-        //    await Bot.SendMessage(update.Message.Chat.Id, message);
+        //    await BotBase.SendMessage(update.Message.Chat.Id, message);
         //}
     }
 
     public async Task StartAsync(Update update)
     {
         var result = await Task.FromResult(await Model.StartAsync());
-        await Bot.SendMessage(Bot.GetChatId(update), result.Text);
+        await BotBase.SendMessage(BotBase.GetChatId(update), result.Text);
     }
 }

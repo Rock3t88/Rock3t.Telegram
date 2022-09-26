@@ -19,7 +19,6 @@ public class ScaryTerryConfig : BotConfig
 
     public ScaryTerryConfig()
     {
-
     }
 
     //public static ScaryTerryConfig Load(string fileName = "Config\\Config.yml")

@@ -25,7 +25,7 @@ public class GameManager
     {
     }
 
-    public IGame Create(Type gameType, User user, TelegramBot bot)
+    public IGame Create(Type gameType, User user, TelegramBotBase botBase)
     {
         //game = game.ToLower();
 
@@ -41,7 +41,7 @@ public class GameManager
 
         //Type gameType = Games[game];
 
-        var newGame = Activator.CreateInstance(gameType, bot) as IGame;
+        var newGame = Activator.CreateInstance(gameType, botBase) as IGame;
 
         if (newGame == null)
             throw new Exception($"Could not create IGame instance of type {gameType.Name}!");

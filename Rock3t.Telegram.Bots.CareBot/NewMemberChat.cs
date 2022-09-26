@@ -10,7 +10,7 @@ namespace Rock3t.Telegram.Bots.CareBot;
 
 public class NewMemberChat
 {
-    private CareBot _careBot;
+    private CareBotBase _careBotBase;
 
     public bool WaitingForAnswer { get; private set; }
 
@@ -33,9 +33,9 @@ public class NewMemberChat
             throw new Exception("Secret already set!");
     }
 
-    public NewMemberChat(long id, long userId, string userName, CareBot careBot, params Question[] questions)
+    public NewMemberChat(long id, long userId, string userName, CareBotBase careBotBase, params Question[] questions)
     {
-        _careBot = careBot;
+        _careBotBase = careBotBase;
         Questions = new List<Question>(questions);
 
         Id = id;
@@ -50,7 +50,7 @@ public class NewMemberChat
         if (string.IsNullOrWhiteSpace(text))
             return;
 
-        await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+        await _careBotBase.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
         Thread.Sleep(2000);
 
         switch (CurrentJoinStep)
@@ -82,7 +82,7 @@ public class NewMemberChat
 
                 if (!RulesAccepted && !text.ToLower().Equals(StartSecret?.ToLower()))
                 {
-                    await _careBot.SendTextMessageAsync(
+                    await _careBotBase.SendTextMessageAsync(
                         update.Message.Chat.Id,
                         "Das war leider falsch, hast du die Regeln etwa nicht sorgfältig genug gelesen?\t\n" +
                         "Es ist wirklich ganz einfach, du musst sie einmal richtig lesen, dann weißt du sofort wie es weiter geht 😉");
@@ -99,10 +99,10 @@ public class NewMemberChat
                     {
                         questionIndex = 0;
 
-                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                        await _careBotBase.SendTextMessageAsync(_careBotBase.AdminChannelId,
                             $"Die Regeln wurden von @{UserName} akzeptiert.");
 
-                        await _careBot.SendTextMessageAsync(
+                        await _careBotBase.SendTextMessageAsync(
                             update.Message.Chat.Id,
                             "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
                             "durch die deine Aufnahme noch schneller durchgeführt werden kann.\r\n\r\nDu musst aber natürlich auf keine der Fragen antworten, wenn du das nicht möchtest. " +
@@ -116,7 +116,7 @@ public class NewMemberChat
                     }
 
                     if (WaitingForAnswer)
-                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                        await _careBotBase.SendTextMessageAsync(_careBotBase.AdminChannelId,
                             $"*Antwort von @{UserName}*\r\n\r\n*{CurrentQuestion.Text}*\r\n{text}", ParseMode.Markdown);
 
                     if (questionIndex >= Questions.Count)
@@ -129,7 +129,7 @@ public class NewMemberChat
                     }
 
                     CurrentQuestion = Questions[questionIndex];
-                    await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+                    await _careBotBase.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
                     Thread.Sleep(2000);
                     await OnAskQuestion(update, questionIndex);
                     WaitingForAnswer = true;
@@ -146,7 +146,7 @@ public class NewMemberChat
                 {
                     CurrentJoinStep = JoinSteps.Joined;
 
-                    await _careBot.SendTextMessageAsync(update.Message.Chat.Id,
+                    await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id,
                         "Klasse! Das hat ja super geklappt! ☺️\r\n" +
                         "Nun wird sich sobald wie möglich ein Orga-Mitglied bei dir melden. Bitte habe etwas Geduld, " +
                         "Möglicherweise sind gerade alle beschäftigt. Solltest du dennoch das Gefühl bekommen vergessen worden zu sein, " +
@@ -158,9 +158,9 @@ public class NewMemberChat
 
                 if (text.ToLower().Contains("ping"))
                 {
-                    await _careBot.SendTextMessageAsync(update.Message.From.Id,
+                    await _careBotBase.SendTextMessageAsync(update.Message.From.Id,
                         $"Alles klar, ich habe die Orga-Mitglieder darüber informiert, dass du ungeduldigt bist.");
-                    await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                    await _careBotBase.SendTextMessageAsync(_careBotBase.AdminChannelId,
                         $"@{update.Message.From.Username} hat gepingt.");
                 }
 
@@ -172,7 +172,7 @@ public class NewMemberChat
 
     private async Task OnAskQuestion(Update update, int questionIndex)
     {
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, Questions[questionIndex].Text);
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, Questions[questionIndex].Text);
     }
 
     private async Task OnSendGroupRules(Update update)
@@ -181,7 +181,7 @@ public class NewMemberChat
         var lastName = update.Message.Chat.LastName;
         var userName = update.Message.Chat.Username;
 
-        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId, $"Neue Gruppenanfrage von @{userName}");
+        await _careBotBase.SendTextMessageAsync(_careBotBase.AdminChannelId, $"Neue Gruppenanfrage von @{userName}");
 
         Thread.Sleep(3000);
 
@@ -190,18 +190,18 @@ public class NewMemberChat
 
         SetSecret(word);
 
-        StringBuilder groupRulesBuilder = new StringBuilder();
+        var groupRulesBuilder = new StringBuilder();
         groupRulesBuilder.AppendLine("*Gruppenregeln*");
 
-        foreach (var rule in _careBot.Config.GroupRules)
+        foreach (var rule in _careBotBase.Config.GroupRules)
         {
             groupRulesBuilder.AppendLine();
             groupRulesBuilder.AppendLine(rule);
         }
 
-        string groupRules = groupRulesBuilder.ToString().Replace("{secret}", word);
+        var groupRules = groupRulesBuilder.ToString().Replace("{secret}", word);
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, groupRules, ParseMode.Markdown);
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, groupRules, ParseMode.Markdown);
 
         Thread.Sleep(2000);
 
@@ -211,7 +211,7 @@ public class NewMemberChat
             "Als nächstes bitte ich dich unsere Gruppenregeln zu bestätigen. *Bitte lies sie dir sorgfältig durch*, " +
             "darin ist nämlich auch der nächste Schritt beschrieben, ohne den es nicht weiter geht. 😉");
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
     }
 
     private async Task OnSendJoinLink(Update update)
@@ -228,18 +228,19 @@ public class NewMemberChat
             "Beachte dass dieser Link nur *für dich 24 Stunden gültig* ist und genau *ein Mal* benutzt werden kann. " +
             "Danach wird sich ein Orga-Mitglied sobald wie möglich bei dir melden.");
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
 
         var linkTime = DateTime.Now;
         linkTime = linkTime.AddHours(24);
 
         var inviteLink =
-            await _careBot.CreateChatInviteLinkAsync(
-                _careBot.FoyerChannelId, "CG/L - NRW - Foyer", linkTime);
+            await _careBotBase.CreateChatInviteLinkAsync(
+                _careBotBase.FoyerChannelId, "CG/L - NRW - Foyer", linkTime);
 
         InviteLink = inviteLink;
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}", ParseMode.Markdown);
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}",
+            ParseMode.Markdown);
     }
 
     private async Task OnStartChat(object? sender, Update update)
@@ -259,7 +260,7 @@ public class NewMemberChat
             "hier mit deinen Daten passiert. Denn schließlich bist du gewohnt, " +
             "dass nur die eine Person deine Nachrichten lesen kann, mit der du schreibst. " +
             "\r\n\r\n" +
-            "Nunja, vermutlich hast du es bereits an meinem Namen erkannt. Ich bin ein Bot. Das heißt, " +
+            "Nunja, vermutlich hast du es bereits an meinem Namen erkannt. Ich bin ein BotBase. Das heißt, " +
             "dass mindestens die EntwicklerInnen die Nachrichten aus diesem Chat mitlesen könnten, " +
             "wenn sie wollten. Da bei uns *Datenschutz* großgeschrieben wird, werden deine Nachrichten daher erst weitergeleitet " +
             "sobald du deine Zustimmung dazu gegeben hast." +
@@ -270,7 +271,7 @@ public class NewMemberChat
             "die du in diesem Chat mit mir schreibst.*");
 
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(),
+        await _careBotBase.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(),
             ParseMode.Markdown, disableWebPagePreview: true, replyMarkup: new ReplyKeyboardMarkup(
                 new List<KeyboardButton>
                 {

@@ -1,5 +1,4 @@
-﻿
-public abstract class TelegramEventBase
+﻿public abstract class TelegramEventBase
 {
     public int id { get; set; }
     public long chat_id { get; set; }

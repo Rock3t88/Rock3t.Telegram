@@ -23,15 +23,13 @@ public enum ServicesTypes
     scene
 }
 
-
 public class HomeAssistantWrapper
 {
-   
-    private ScaryTerryBot _bot;
+    private ScaryTerryBotBase _botBase;
 
-    public HomeAssistantWrapper(ScaryTerryBot bot)
+    public HomeAssistantWrapper(ScaryTerryBotBase botBase)
     {
-        _bot = bot;
+        _botBase = botBase;
     }
 
     public async void CallService(ServicesTypes servicesType, MessageData data)
@@ -39,19 +37,20 @@ public class HomeAssistantWrapper
         switch (servicesType)
         {
             case ServicesTypes.send_message:
-                await _bot.SendTextMessageAsync(data.target, data.message, ParseMode.Markdown);
+                await _botBase.SendTextMessageAsync(data.target, data.message, ParseMode.Markdown);
                 break;
             case ServicesTypes.send_photo:
-                await _bot.SendPhotoAsync(data.target, data.url, data.caption, ParseMode.Markdown);
+                await _botBase.SendPhotoAsync(data.target, data.url, data.caption, ParseMode.Markdown);
                 break;
             case ServicesTypes.notify:
-                await _bot.SendTextMessageAsync(_bot.Config.AdminChannelId, data.message, ParseMode.Markdown);
+                await _botBase.SendTextMessageAsync(_botBase.Config.AdminChannelId, data.message, ParseMode.Markdown);
                 break;
             case ServicesTypes.send_voice:
-                await _bot.SendAudioAsync(data.target, data.url, data.caption, ParseMode.Markdown);
+                await _botBase.SendAudioAsync(data.target, data.url, data.caption, ParseMode.Markdown);
                 break;
             case ServicesTypes.scene:
-                await _bot.SendTextMessageAsync(_bot.Config.AdminChannelId, $"Scene executed: {data.entity_id}", ParseMode.Markdown);
+                await _botBase.SendTextMessageAsync(_botBase.Config.AdminChannelId, $"Scene executed: {data.entity_id}",
+                    ParseMode.Markdown);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(servicesType), servicesType, null);

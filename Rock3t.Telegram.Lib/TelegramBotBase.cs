@@ -7,9 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Rock3t.Telegram.Lib;
 
-
-
-public abstract class TelegramBot : TelegramBotClient, ITelegramBot
+public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
 {
     private CancellationToken _cancellationToken = CancellationToken.None;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -23,7 +21,7 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     public bool IsRunning { get; private set; }
 
-    protected TelegramBot(string token) : base(token)
+    protected TelegramBotBase(string token) : base(token)
     {
         CommandManager = new CommandManager(this);
         CommandManager.ChatStarted += OnChatStarted;

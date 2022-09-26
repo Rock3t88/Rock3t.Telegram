@@ -18,7 +18,7 @@ public class BotConfig : IBotConfig
         {
             var name = GetType().Name.Replace("BotConfig", "");
 
-            if (!name.ToLower().EndsWith("bot")) name += "Bot";
+            if (!name.ToLower().EndsWith("botBase")) name += "BotBase";
 
             return name;
         }

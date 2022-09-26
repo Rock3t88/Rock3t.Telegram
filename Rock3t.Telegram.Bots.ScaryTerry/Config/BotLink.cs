@@ -13,6 +13,5 @@ public class BotLink
 
     public BotLink()
     {
-        
     }
 }

@@ -13,22 +13,22 @@ public class Helper
         if (Tokens.ContainsKey(token.ToLower()))
             return Tokens[token.ToLower()];
         else return null;
-
     }
 
 
     public string ReplaceTokens(string input, Dictionary<string, object?>? dict)
     {
-        string output = input;
+        var output = input;
 
-        foreach (KeyValuePair<string, object?> pair in Tokens)
+        foreach (var pair in Tokens)
         {
-            string value = pair.Value?.ToString() ?? "";
+            var value = pair.Value?.ToString() ?? "";
             output = Regex.Replace(output, $"{{{pair.Key}}}", value, RegexOptions.IgnoreCase);
         }
-        foreach (KeyValuePair<string, object?> pair in dict)
+
+        foreach (var pair in dict)
         {
-            string value = pair.Value?.ToString() ?? "";
+            var value = pair.Value?.ToString() ?? "";
             output = Regex.Replace(output, $"{{{pair.Key}}}", value, RegexOptions.IgnoreCase);
         }
 
@@ -43,17 +43,13 @@ public class Helper
 
     public void Init()
     {
-        foreach (object obj in TokenSource)
+        foreach (var obj in TokenSource)
         {
             var tokens = GetTokens(obj);
 
-            foreach (KeyValuePair<string, object?> pair in tokens)
-            {
+            foreach (var pair in tokens)
                 if (!Tokens.ContainsKey(pair.Key))
-                {
                     Tokens.Add(pair.Key.ToLower(), pair.Value);
-                }
-            }
         }
     }
 
@@ -61,27 +57,21 @@ public class Helper
     {
         var dict = new Dictionary<string, object?>();
 
-        PropertyInfo[] properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        var properties = obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-        foreach (PropertyInfo property in properties)
-        {
+        foreach (var property in properties)
             if (IsSimple(property.PropertyType))
-            {
                 dict.Add(property.Name, property.GetValue(obj));
-            }
-        }
 
         return dict;
     }
 
-    bool IsSimple(Type type)
+    private bool IsSimple(Type type)
     {
         var typeInfo = type.GetTypeInfo();
         if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(Nullable<>))
-        {
             // nullable type, check if the nested type is simple.
             return IsSimple(typeInfo.GetGenericArguments()[0]);
-        }
         return typeInfo.IsPrimitive
                || typeInfo.IsEnum
                || type.Equals(typeof(string))

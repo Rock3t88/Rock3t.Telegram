@@ -2,11 +2,11 @@
 
 public class BotEvents
 {
-    private TelegramBot _bot;
+    private TelegramBotBase _botBase;
 
-    public BotEvents(TelegramBot bot)
+    public BotEvents(TelegramBotBase botBase)
     {
-        _bot = bot;
+        _botBase = botBase;
     }
 
     public void Subscribe()

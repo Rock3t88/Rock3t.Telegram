@@ -14,6 +14,5 @@ public class Notifier
 
     public Notifier()
     {
-
     }
 }

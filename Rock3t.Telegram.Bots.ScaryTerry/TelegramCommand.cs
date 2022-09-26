@@ -3,5 +3,4 @@
 public class TelegramCommand : TelegramEventBase
 {
     public string command { get; set; }
-
 }
