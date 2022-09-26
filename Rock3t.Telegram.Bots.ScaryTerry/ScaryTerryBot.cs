@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Rock3t.Telegram.Bots.ScaryTerry.Config;
 using Rock3t.Telegram.Bots.ScaryTerry.db;
 using Rock3t.Telegram.Lib;
-using Rock3t.Telegram.Lib.LiteDB;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Action = Rock3t.Telegram.Bots.ScaryTerry.Config.Action;
@@ -43,17 +42,17 @@ public class ScaryTerryBot : TelegramBot
         _db.DatabaseFileName = "ScaryTerry.db";
         _db.DatabaseFilePath = "./db";
 
-        _triggeredWelcomes = _db.GetWelcomeMessages(true);
+        var triggeredWelcomes = _db.GetWelcomeMessages(true);
 
         _welcomeMessages = _db.GetWelcomeMessages(false);
-        _welcomeMessages.AddRange(Config.WelcomeMessages.Where(msg => !_triggeredWelcomes.Contains(msg)));
+        _welcomeMessages.AddRange(Config.WelcomeMessages.Where(msg => !triggeredWelcomes.Contains(msg)));
 
         _randomWelcomeMessages = new List<string>(_welcomeMessages);
-        _users = _db.GetUsers().ToList();
+        var users = _db.GetUsers().ToList();
 
-        _logger.LogInformation("User Count: {0}", _users.Count);
+        _logger.LogInformation("User Count: {0}", users.Count);
 
-        foreach (var user in _users)
+        foreach (var user in users)
 
         {
             LoggedInUsers.Add(user.UserId, new TelegramUser { UserId = user.UserId, Name = user.Name });

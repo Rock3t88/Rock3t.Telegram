@@ -8,11 +8,11 @@ public class CommandManager
 {
     public event EventHandler<Update> ChatStarted;
 
-    public TelegramBot Bot { get; }
+    public ITelegramBot Bot { get; }
 
     public Dictionary<string, Command> Commands = new();
 
-    public CommandManager(TelegramBot bot)
+    public CommandManager(ITelegramBot bot)
     {
         Bot = bot;
         Commands.Add("hilfe", new Command("hilfe", "Listet alle Commands auf.", GetHelp));
