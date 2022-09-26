@@ -158,7 +158,7 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBotBase
 
     private async Task OnUpdate(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        GameManager.RunningGames.ForEach(instance => instance.Game.DoUpdates(update));
+        GameManager.RunningGames.ForEach(async instance => await instance.Game.DoUpdates(update));
         CommandManager.DoCommands(update);
         await OnUpdate(update);
         await Task.CompletedTask;
@@ -168,5 +168,10 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBotBase
     {
         OnErrorOccured(ex);
         await Task.CompletedTask;
+    }
+
+    public override string ToString()
+    {
+        return GetType().Name;
     }
 }

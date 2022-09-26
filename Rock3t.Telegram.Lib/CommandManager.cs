@@ -32,7 +32,7 @@ public class CommandManager
         if (string.IsNullOrWhiteSpace(text))
             return;
 
-        var cmdRegex = new Regex(@"(\/.*)(.*)", RegexOptions.IgnoreCase);
+        var cmdRegex = new Regex(@"/.*", RegexOptions.IgnoreCase);
 
         var match = cmdRegex.Match(text);
 

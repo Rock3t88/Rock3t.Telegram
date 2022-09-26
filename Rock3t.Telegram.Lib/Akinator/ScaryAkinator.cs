@@ -113,4 +113,9 @@ public class ScaryAkinator : IDisposable
     {
         _client.Dispose();
     }
+
+    public async Task Start()
+    {
+        throw new NotImplementedException();
+    }
 }
