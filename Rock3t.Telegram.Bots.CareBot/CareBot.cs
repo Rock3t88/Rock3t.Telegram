@@ -9,7 +9,7 @@ using File = System.IO.File;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
-public class CareBot : TelegramBotBase
+public class CareBot : TelegramBot
 {
     public List<long> AllowedGroupIds { get; private set; }
     public List<long> AllowedChannelIds { get; set; }
