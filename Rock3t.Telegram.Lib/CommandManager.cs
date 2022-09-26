@@ -8,13 +8,13 @@ public class CommandManager
 {
     public event EventHandler<Update> ChatStarted;
 
-    public TelegramBotBase BotBase { get; }
+    public TelegramBot Bot { get; }
 
     public Dictionary<string, Command> Commands = new();
 
-    public CommandManager(TelegramBotBase botBase)
+    public CommandManager(TelegramBot bot)
     {
-        BotBase = botBase;
+        Bot = bot;
         Commands.Add("hilfe", new Command("hilfe", "Listet alle Commands auf.", GetHelp));
         Commands.Add("start", new Command("start", "Startet einen Chat mit Carebot.", OnChatStart));
     }
@@ -55,12 +55,12 @@ public class CommandManager
 
     private async Task GetHelp(Update update)
     {
-        var chatId = BotBase.GetChatId(update);
+        var chatId = Bot.GetChatId(update);
 
         var sb = new StringBuilder();
 
         foreach (var item in Commands) sb.AppendLine($"/{item.Key} - {item.Value.Description}");
 
-        await BotBase.SendMessage(chatId, sb.ToString());
+        await Bot.SendMessage(chatId, sb.ToString());
     }
 }

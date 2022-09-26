@@ -4,7 +4,7 @@ namespace Rock3t.Telegram.Lib;
 
 public interface IGame
 {
-    TelegramBotBase BotBase { get; }
+    TelegramBot Bot { get; }
     Message? LastMessage { get; set; }
     Message? LastAnswer { get; set; }
     bool Completed { get; }

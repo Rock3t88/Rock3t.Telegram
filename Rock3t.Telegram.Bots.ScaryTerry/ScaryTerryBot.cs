@@ -11,25 +11,19 @@ using Action = Rock3t.Telegram.Bots.ScaryTerry.Config.Action;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry;
 
-public class ScaryTerryBot : TelegramBotBase
+public class ScaryTerryBot : TelegramBot
 {
     private readonly Random _random = Random.Shared;
-    private TelegramUser? _currentAktinatorPlayer;
-
     private readonly ILogger<ScaryTerryBot> _logger;
-
-    private readonly List<ScaryTerry.Config.Action> _actions;
+    private readonly List<Action> _actions;
     private readonly List<Action> _randomActions;
     private readonly List<string> _welcomeMessages;
     private readonly List<string> _randomWelcomeMessages;
-    private readonly Dictionary<string, object?> _tokens;
     private readonly Helper _helper;
-    private Dictionary<string, object?> _temporaryTokens;
+    private Dictionary<string, object?>? _temporaryTokens;
     private readonly ScaryTerryDb _db;
-    private readonly List<TelegramUserEntity> _users;
-    private readonly List<string> _triggeredWelcomes;
-    private IOptions<ScaryTerryConfig> _options;
-    private HomeAssistantWrapper _ha;
+    private readonly IOptions<ScaryTerryConfig> _options;
+    private readonly HomeAssistantWrapper _ha;
 
     public ScaryTerryConfig Config => _options.Value;
 
@@ -43,7 +37,6 @@ public class ScaryTerryBot : TelegramBotBase
         _logger = logger;
         _options = options;
         _helper = new();
-        _tokens = new();
         _randomActions = new List<Action>(Config.RandomActions);
 
         _db = new ScaryTerryDb();
@@ -61,6 +54,7 @@ public class ScaryTerryBot : TelegramBotBase
         _logger.LogInformation("User Count: {0}", _users.Count);
 
         foreach (var user in _users)
+
         {
             LoggedInUsers.Add(user.UserId, new TelegramUser { UserId = user.UserId, Name = user.Name });
             _logger.LogInformation("{0} ({1})", user.Name, user.UserId);
@@ -376,7 +370,7 @@ public class ScaryTerryBot : TelegramBotBase
     private void LogConfiguration()
     {
         _logger.LogInformation("Configuration:");
-        _logger.LogInformation("BotBase.Name: {0}, MainChatId: {1}", Config.Name, Config.MainChatId);
+        _logger.LogInformation("Bot.Name: {0}, MainChatId: {1}", Config.Name, Config.MainChatId);
 
         foreach (var notifier in Config.Notifiers)
         {
