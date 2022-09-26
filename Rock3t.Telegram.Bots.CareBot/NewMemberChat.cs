@@ -80,6 +80,15 @@ public class NewMemberChat
                 break;
             case JoinSteps.PrivacyAccepted:
 
+                if (!RulesAccepted && !text.ToLower().Equals(StartSecret?.ToLower()))
+                {
+                    await _careBot.SendTextMessageAsync(
+                        update.Message.Chat.Id,
+                        "Das war leider falsch, hast du die Regeln etwa nicht sorgfältig genug gelesen?\t\n" +
+                        "Es ist wirklich ganz einfach, du musst sie einmal richtig lesen, dann weißt du sofort wie es weiter geht 😉");
+                    return;
+                }
+
                 if (RulesAccepted || text.ToLower().Equals(StartSecret?.ToLower()))
                 {
                     RulesAccepted = true;
@@ -92,6 +101,7 @@ public class NewMemberChat
 
                         await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
                             $"Die Regeln wurden von @{UserName} akzeptiert.");
+
                         await _careBot.SendTextMessageAsync(
                             update.Message.Chat.Id,
                             "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
@@ -182,7 +192,6 @@ public class NewMemberChat
 
         StringBuilder groupRulesBuilder = new StringBuilder();
         groupRulesBuilder.AppendLine("*Gruppenregeln*");
-        groupRulesBuilder.AppendLine();
 
         foreach (var rule in _careBot.Config.GroupRules)
         {
@@ -221,7 +230,6 @@ public class NewMemberChat
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
 
-
         var linkTime = DateTime.Now;
         linkTime = linkTime.AddHours(24);
 
@@ -231,7 +239,7 @@ public class NewMemberChat
 
         InviteLink = inviteLink;
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"{inviteLink.InviteLink}", ParseMode.Markdown);
+        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}", ParseMode.Markdown);
     }
 
     private async Task OnStartChat(object? sender, Update update)
@@ -254,8 +262,7 @@ public class NewMemberChat
             "Nunja, vermutlich hast du es bereits an meinem Namen erkannt. Ich bin ein Bot. Das heißt, " +
             "dass mindestens die EntwicklerInnen die Nachrichten aus diesem Chat mitlesen könnten, " +
             "wenn sie wollten. Da bei uns *Datenschutz* großgeschrieben wird, werden deine Nachrichten daher erst weitergeleitet " +
-            "sobald du deine Zustimmung dazu gegeben hast.\r\n" +
-            "_Um Transparenz und Datenschutz zu wahren, besteht sogar die Möglichkeit in meinen Quellcode zu schauen: https://github.com/Rock3t88/Rock3t.Telegram/_" +
+            "sobald du deine Zustimmung dazu gegeben hast." +
             "\r\n\r\n" +
             "Um deine Gruppenaufnahme durchführen zu können, bitte ich dich nun zu *Bestätigen, " +
             "dass du diese Information verstanden hast und damit einverstanden bist, dass die Orga-Mitglieder von CG/L - NRW " +
@@ -264,7 +271,7 @@ public class NewMemberChat
 
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(),
-            ParseMode.Markdown, replyMarkup: new ReplyKeyboardMarkup(
+            ParseMode.Markdown, disableWebPagePreview: true, replyMarkup: new ReplyKeyboardMarkup(
                 new List<KeyboardButton>
                 {
                     new("Einverstanden"),
