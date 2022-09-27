@@ -310,6 +310,15 @@ public class NewMemberChat
         var sb = new StringBuilder();
         sb.AppendLine(string.Format("Hallo {0}! Freut mich sehr, dass du mir schreibst ☺️",
             firstName ?? userName ?? lastName));
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            sb.AppendLine();
+            sb.AppendLine("Zuerst einmal ist mir aufgefallen, dass du keinen Benutzernamen erstellt hast.");
+            sb.AppendLine("Leider ist das nötig, damit wir dich am Ende des Aufnahmeprozesses der Gruppe hinzufügen können.");
+            sb.AppendLine("Eine Anleitung dazu findest du in der Google-Suche: https://www.google.com/search?q=telegram+benutzername+erstellen");
+        }
+
         sb.AppendLine();
         sb.AppendLine(
             "Bei uns wird *Vertrauen* sehr groß geschrieben, deswegen möchte ich dir kurz erklären was " +
