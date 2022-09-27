@@ -11,9 +11,9 @@ public class NewMemberChat
 {
     private CareBot _careBot;
     private readonly ILogger _logger;
+    static SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
     public bool WaitingForAnswer { get; private set; }
-
     public long Id { get; }
     public long UserId { get; }
     public string UserName { get; }
@@ -46,155 +46,173 @@ public class NewMemberChat
 
     public async Task Execute(Update update)
     {
-        var text = update.Message?.Text;
-
-        if (string.IsNullOrWhiteSpace(text))
-            return;
-
-        long? chatId = update.Message?.Chat.Id;
-
-        _logger.LogDebug("[{chatId}] {class}.{method}: {currentJoinStep} - {user} ({userId}, {startSecret})\r\nWaitingForAnswer: {waitingForAnswer}\r\n" +
-                         "ChatAccepted: {chatAccepted}\r\nRulesAccpeted: {rulesAccepted}\r\nCurrentQuestion: {currentQuestion}\r\nInviteLink: {inviteLink}", 
-            chatId, nameof(NewMemberChat), nameof(Execute), CurrentJoinStep, update.Message?.From?.Username, update.Message?.From?.Id,
-            StartSecret, WaitingForAnswer, Accepted, RulesAccepted, CurrentQuestion, InviteLink?.InviteLink);
-
-        await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
-        Thread.Sleep(2000);
-
-        switch (CurrentJoinStep)
+        try
         {
-            case JoinSteps.New:
+            await _semaphoreSlim.WaitAsync();
 
-                if (WaitingForAnswer)
-                {
-                    if (text.ToLower().Equals("einverstanden"))
+            var text = update.Message?.Text;
+
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            long? chatId = update.Message?.Chat.Id;
+
+            _logger.LogDebug(
+                "[{chatId}] {class}.{method}: {currentJoinStep} - {user} ({userId}, {startSecret})\r\nWaitingForAnswer: {waitingForAnswer}\r\n" +
+                "ChatAccepted: {chatAccepted}\r\nRulesAccpeted: {rulesAccepted}\r\nCurrentQuestion: {currentQuestion}\r\nInviteLink: {inviteLink}",
+                chatId, nameof(NewMemberChat), nameof(Execute), CurrentJoinStep, update.Message?.From?.Username,
+                update.Message?.From?.Id,
+                StartSecret, WaitingForAnswer, Accepted, RulesAccepted, CurrentQuestion, InviteLink?.InviteLink);
+
+            await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+            Thread.Sleep(2000);
+
+            switch (CurrentJoinStep)
+            {
+                case JoinSteps.New:
+
+                    if (WaitingForAnswer)
                     {
-                        CurrentJoinStep = JoinSteps.PrivacyAccepted;
-                        _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
-                        await OnSendGroupRules(update);
-                    }
-                    else if (text.ToLower().Equals("Ich habe doch kein Interesse mehr"))
-                    {
-                        _logger.LogDebug("[{chatId}] {method} Kein Intersse!", chatId, nameof(OnSendGroupRules));
-                        //CurrentJoinStep = JoinSteps.PrivacyRejected;
-                    }
+                        if (text.ToLower().Equals("einverstanden"))
+                        {
+                            CurrentJoinStep = JoinSteps.PrivacyAccepted;
+                            _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
+                            await OnSendGroupRules(update);
+                        }
+                        else if (text.ToLower().Equals("Ich habe doch kein Interesse mehr"))
+                        {
+                            _logger.LogDebug("[{chatId}] {method} Kein Intersse!", chatId, nameof(OnSendGroupRules));
+                            //CurrentJoinStep = JoinSteps.PrivacyRejected;
+                        }
 
-                    WaitingForAnswer = false;
-                }
-                else
-                {
-                    _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
-                    await OnStartChat(this, update);
-                    WaitingForAnswer = true;
-                }
-
-                break;
-            case JoinSteps.PrivacyAccepted:
-
-                if (!RulesAccepted && !text.ToLower().Equals(StartSecret?.ToLower()))
-                {
-                    _logger.LogDebug("[{chatId}] {method}", chatId, "WrongSecret");
-                   
-                    await _careBot.SendTextMessageAsync(
-                        update.Message.Chat.Id,
-                        "Das war leider falsch, hast du die Regeln etwa nicht sorgfältig genug gelesen?\t\n" +
-                        "Es ist wirklich ganz einfach, du musst sie einmal richtig lesen, dann weißt du sofort wie es weiter geht 😉");
-                    return;
-                }
-
-                if (RulesAccepted || text.ToLower().Equals(StartSecret?.ToLower()))
-                {
-                    RulesAccepted = true;
-                    CurrentJoinStep = JoinSteps.PrivacyAccepted;
-                    int questionIndex;
-
-                    if (CurrentQuestion == null)
-                    {
-                        questionIndex = 0;
-
-                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                            $"Die Regeln wurden von @{UserName} akzeptiert.");
-
-                        _logger.LogDebug("[{chatId}] {method}", chatId, "QuestionsStartet");
-                        
-                        await _careBot.SendTextMessageAsync(
-                            update.Message.Chat.Id,
-                            "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
-                            "durch die deine Aufnahme noch schneller durchgeführt werden kann.\r\n\r\nDu musst aber natürlich auf keine der Fragen antworten, wenn du das nicht möchtest. " +
-                            "Schreibe in diesem Fall einfach irgendetwas in den Chat, z.B. _keine Angabe_ oder _ka_.\r\n\r\n" +
-                            "*Beachte: Orga-Mitglieder können deine Antworten maximal 7 Tage lang sehen, danach werden sie automatisch gelöscht.*",
-                            ParseMode.Markdown);
+                        WaitingForAnswer = false;
                     }
                     else
                     {
-                        questionIndex = Questions.IndexOf(CurrentQuestion) + 1;
+                        _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
+                        await OnStartChat(this, update);
+                        WaitingForAnswer = true;
                     }
 
-                    if (WaitingForAnswer)
-                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                            $"*Antwort von @{UserName}*\r\n\r\n*{CurrentQuestion.Text}*\r\n{text}", ParseMode.Markdown);
+                    break;
+                case JoinSteps.PrivacyAccepted:
 
-                    if (questionIndex >= Questions.Count)
+                    if (!RulesAccepted && !text.ToLower().Equals(StartSecret?.ToLower()))
                     {
-                        WaitingForAnswer = false;
-                        CurrentJoinStep = JoinSteps.QuestionsAnswered;
-                        
-                        _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendJoinLink));
+                        _logger.LogDebug("[{chatId}] {method}", chatId, "WrongSecret");
 
-                        await OnSendJoinLink(update);
-                        CurrentJoinStep = JoinSteps.Joined;
+                        await _careBot.SendTextMessageAsync(
+                            update.Message.Chat.Id,
+                            "Das war leider falsch, hast du die Regeln etwa nicht sorgfältig genug gelesen?\t\n" +
+                            "Es ist wirklich ganz einfach, du musst sie einmal richtig lesen, dann weißt du sofort wie es weiter geht 😉");
                         return;
                     }
 
-                    CurrentQuestion = Questions[questionIndex];
-                    await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
-                    Thread.Sleep(2000);
-        
-                    _logger.LogDebug("[{chatId}] {method}({questionIndex})", chatId, nameof(OnAskQuestion), questionIndex);
-                    
-                    await OnAskQuestion(update, questionIndex);
-                    WaitingForAnswer = true;
-                }
+                    if (RulesAccepted || text.ToLower().Equals(StartSecret?.ToLower()))
+                    {
+                        RulesAccepted = true;
+                        CurrentJoinStep = JoinSteps.PrivacyAccepted;
+                        int questionIndex;
 
-                break;
-            case JoinSteps.PrivacyRejected:
-                _logger.LogDebug("[{chatId}] PrivacyRejected", chatId);
-                break;
-            case JoinSteps.QuestionsAnswered:
-                _logger.LogDebug("[{chatId}] - QuestionAnswered", chatId);
-                break;
-            case JoinSteps.RulesAccepted:
+                        if (CurrentQuestion == null)
+                        {
+                            questionIndex = 0;
 
-                if (update.Type == UpdateType.ChatJoinRequest)
-                {
-                    CurrentJoinStep = JoinSteps.Joined;
+                            await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                                $"Die Regeln wurden von @{UserName} akzeptiert.");
 
-                    _logger.LogDebug("[{chatId}] - Finalized", chatId);
+                            _logger.LogDebug("[{chatId}] {method}", chatId, "QuestionsStartet");
 
-                    await _careBot.SendTextMessageAsync(update.Message.Chat.Id,
-                        "Klasse! Das hat ja super geklappt! ☺️\r\n" +
-                        "Nun wird sich sobald wie möglich ein Orga-Mitglied bei dir melden. Bitte habe etwas Geduld, " +
-                        "Möglicherweise sind gerade alle beschäftigt. Solltest du dennoch das Gefühl bekommen vergessen worden zu sein, " +
-                        "schreibe *ping* in diesen Chat.", ParseMode.Markdown);
-                }
+                            await _careBot.SendTextMessageAsync(
+                                update.Message.Chat.Id,
+                                "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
+                                "durch die deine Aufnahme noch schneller durchgeführt werden kann.\r\n\r\nDu musst aber natürlich auf keine der Fragen antworten, wenn du das nicht möchtest. " +
+                                "Schreibe in diesem Fall einfach irgendetwas in den Chat, z.B. _keine Angabe_ oder _ka_.\r\n\r\n" +
+                                "*Beachte: Orga-Mitglieder können deine Antworten maximal 7 Tage lang sehen, danach werden sie automatisch gelöscht.*",
+                                ParseMode.Markdown);
+                        }
+                        else
+                        {
+                            questionIndex = Questions.IndexOf(CurrentQuestion) + 1;
+                        }
 
-                break;
-            case JoinSteps.Joined:
+                        if (WaitingForAnswer)
+                            await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                                $"*Antwort von @{UserName}*\r\n\r\n*{CurrentQuestion.Text}*\r\n{text}",
+                                ParseMode.Markdown);
 
-                if (text.ToLower().Contains("ping"))
-                {
-                    _logger.LogDebug("[{chatId}] - Ping", chatId);
-                    
-                    await _careBot.SendTextMessageAsync(update.Message.From.Id,
-                        $"Alles klar, ich habe die Orga-Mitglieder darüber informiert, dass du ungeduldigt bist.");
-                    await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                        $"@{update.Message.From.Username} hat gepingt.");
-                }
+                        if (questionIndex >= Questions.Count)
+                        {
+                            WaitingForAnswer = false;
+                            CurrentJoinStep = JoinSteps.QuestionsAnswered;
 
-                break;
-            default:
-                _logger.LogDebug("[{chatId}] - Wrong JoinStep", chatId);
-                throw new ArgumentOutOfRangeException();
+                            _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendJoinLink));
+
+                            await OnSendJoinLink(update);
+                            CurrentJoinStep = JoinSteps.Joined;
+                            return;
+                        }
+
+                        CurrentQuestion = Questions[questionIndex];
+                        await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
+                        Thread.Sleep(2000);
+
+                        _logger.LogDebug("[{chatId}] {method}({questionIndex})", chatId, nameof(OnAskQuestion),
+                            questionIndex);
+
+                        await OnAskQuestion(update, questionIndex);
+                        WaitingForAnswer = true;
+                    }
+
+                    break;
+                case JoinSteps.PrivacyRejected:
+                    _logger.LogDebug("[{chatId}] PrivacyRejected", chatId);
+                    break;
+                case JoinSteps.QuestionsAnswered:
+                    _logger.LogDebug("[{chatId}] - QuestionAnswered", chatId);
+                    break;
+                case JoinSteps.RulesAccepted:
+
+                    if (update.Type == UpdateType.ChatJoinRequest)
+                    {
+                        CurrentJoinStep = JoinSteps.Joined;
+
+                        _logger.LogDebug("[{chatId}] - Finalized", chatId);
+
+                        await _careBot.SendTextMessageAsync(update.Message.Chat.Id,
+                            "Klasse! Das hat ja super geklappt! ☺️\r\n" +
+                            "Nun wird sich sobald wie möglich ein Orga-Mitglied bei dir melden. Bitte habe etwas Geduld, " +
+                            "Möglicherweise sind gerade alle beschäftigt. Solltest du dennoch das Gefühl bekommen vergessen worden zu sein, " +
+                            "schreibe *ping* in diesen Chat.", ParseMode.Markdown);
+                    }
+
+                    break;
+                case JoinSteps.Joined:
+
+                    if (text.ToLower().Contains("ping"))
+                    {
+                        _logger.LogDebug("[{chatId}] - Ping", chatId);
+
+                        await _careBot.SendTextMessageAsync(update.Message.From.Id,
+                            $"Alles klar, ich habe die Orga-Mitglieder darüber informiert, dass du ungeduldigt bist.");
+                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                            $"@{update.Message.From.Username} hat gepingt.");
+                    }
+
+                    break;
+                default:
+                    _logger.LogDebug("[{chatId}] - Wrong JoinStep", chatId);
+                    throw new ArgumentOutOfRangeException();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        finally
+        {
+            _semaphoreSlim.Release();
         }
     }
 
