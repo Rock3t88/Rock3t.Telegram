@@ -13,10 +13,13 @@ public class NewMemberChat
     private readonly ILogger _logger;
     static SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
+    public User User { get; }
+
     public bool WaitingForAnswer { get; private set; }
     public long Id { get; }
     public long UserId { get; }
-    public string UserName { get; }
+    public string? UserName { get; }
+    public string Name { get; }
     public string? StartSecret { get; private set; }
     public bool RulesAccepted { get; private set; }
     public bool Accepted { get; set; }
@@ -33,15 +36,18 @@ public class NewMemberChat
             throw new Exception("Secret already set!");
     }
 
-    public NewMemberChat(long id, long userId, string userName, CareBot careBot, params Question[] questions)
+    public NewMemberChat(long id, User user, CareBot careBot, params Question[] questions)
     {
         _careBot = careBot;
         _logger = careBot.Logger;
+        
         Questions = new List<Question>(questions);
 
         Id = id;
-        UserId = userId;
-        UserName = userName;
+        User = user;
+        UserId = user.Id;
+        UserName = user.Username;
+        Name = $"{user.FirstName}{(user.LastName == null ? "" : $" {user.LastName}")} (@{UserName ?? "<unbekannt>"})";
     }
 
     public async Task Execute(Update update)
@@ -119,7 +125,7 @@ public class NewMemberChat
                             questionIndex = 0;
 
                             await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                                $"Die Regeln wurden von @{UserName} akzeptiert.");
+                                $"Die Regeln wurden von {Name} akzeptiert.");
 
                             _logger.LogDebug("[{chatId}] {method}", chatId, "QuestionsStartet");
 
@@ -138,7 +144,7 @@ public class NewMemberChat
 
                         if (WaitingForAnswer)
                             await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                                $"*Antwort von @{UserName}*\r\n\r\n*{CurrentQuestion.Text}*\r\n{text}",
+                                $"*Antwort von {Name}*\r\n\r\n*{CurrentQuestion.Text}*\r\n{text}",
                                 ParseMode.Markdown);
 
                         if (questionIndex >= Questions.Count)
@@ -196,7 +202,7 @@ public class NewMemberChat
                         await _careBot.SendTextMessageAsync(update.Message.From.Id,
                             $"Alles klar, ich habe die Orga-Mitglieder darüber informiert, dass du ungeduldigt bist.");
                         await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
-                            $"@{update.Message.From.Username} hat gepingt.");
+                            $"{Name} hat gepingt.");
                     }
 
                     break;
@@ -227,7 +233,7 @@ public class NewMemberChat
         var lastName = update.Message.Chat.LastName;
         var userName = update.Message.Chat.Username;
 
-        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId, $"Neue Gruppenanfrage von @{userName}");
+        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId, $"Neue Gruppenanfrage von {Name}");
 
         Thread.Sleep(3000);
 
@@ -266,8 +272,6 @@ public class NewMemberChat
 
     private async Task OnSendJoinLink(Update update)
     {
-        var userName = update.Message.Chat.Username;
-
         Thread.Sleep(2000);
 
         var sb = new StringBuilder();
