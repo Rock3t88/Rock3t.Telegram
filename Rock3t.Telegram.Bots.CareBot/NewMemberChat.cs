@@ -229,7 +229,7 @@ public class NewMemberChat
             groupRulesBuilder.AppendLine(rule);
         }
 
-        string groupRules = groupRulesBuilder.ToString().Replace("{secret}", word);
+        string groupRules = groupRulesBuilder.ToString().Replace("#secret#", word);
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, groupRules, ParseMode.Markdown);
 

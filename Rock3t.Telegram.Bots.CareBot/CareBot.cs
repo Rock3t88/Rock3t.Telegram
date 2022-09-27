@@ -57,6 +57,8 @@ public class CareBot : TelegramBot
 
         AllowedGroupIds = new List<long>();
         AllowedChannelIds = new List<long>();
+
+            logger.LogConfiguration(Config);
     }
 
     public void Initialize()
