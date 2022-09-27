@@ -1,16 +1,16 @@
 ﻿using System.Text;
-using Rock3t.Telegram.Lib;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using File = System.IO.File;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
 public class NewMemberChat
 {
     private CareBot _careBot;
+    private readonly ILogger _logger;
 
     public bool WaitingForAnswer { get; private set; }
 
@@ -36,6 +36,7 @@ public class NewMemberChat
     public NewMemberChat(long id, long userId, string userName, CareBot careBot, params Question[] questions)
     {
         _careBot = careBot;
+        _logger = careBot.Logger;
         Questions = new List<Question>(questions);
 
         Id = id;
@@ -50,6 +51,13 @@ public class NewMemberChat
         if (string.IsNullOrWhiteSpace(text))
             return;
 
+        long? chatId = update.Message?.Chat.Id;
+
+        _logger.LogDebug("[{chatId}] {class}.{method}: {currentJoinStep} - {user} ({userId}, {startSecret})\r\nWaitingForAnswer: {waitingForAnswer}\r\n" +
+                         "ChatAccepted: {chatAccepted}\r\nRulesAccpeted: {rulesAccepted}\r\nCurrentQuestion: {currentQuestion}\r\nInviteLink: {inviteLink}", 
+            chatId, nameof(NewMemberChat), nameof(Execute), CurrentJoinStep, update.Message?.From?.Username, update.Message?.From?.Id,
+            StartSecret, WaitingForAnswer, Accepted, RulesAccepted, CurrentQuestion, InviteLink?.InviteLink);
+
         await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
         Thread.Sleep(2000);
 
@@ -62,10 +70,12 @@ public class NewMemberChat
                     if (text.ToLower().Equals("einverstanden"))
                     {
                         CurrentJoinStep = JoinSteps.PrivacyAccepted;
+                        _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
                         await OnSendGroupRules(update);
                     }
                     else if (text.ToLower().Equals("Ich habe doch kein Interesse mehr"))
                     {
+                        _logger.LogDebug("[{chatId}] {method} Kein Intersse!", chatId, nameof(OnSendGroupRules));
                         //CurrentJoinStep = JoinSteps.PrivacyRejected;
                     }
 
@@ -73,6 +83,7 @@ public class NewMemberChat
                 }
                 else
                 {
+                    _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendGroupRules));
                     await OnStartChat(this, update);
                     WaitingForAnswer = true;
                 }
@@ -82,6 +93,8 @@ public class NewMemberChat
 
                 if (!RulesAccepted && !text.ToLower().Equals(StartSecret?.ToLower()))
                 {
+                    _logger.LogDebug("[{chatId}] {method}", chatId, "WrongSecret");
+                   
                     await _careBot.SendTextMessageAsync(
                         update.Message.Chat.Id,
                         "Das war leider falsch, hast du die Regeln etwa nicht sorgfältig genug gelesen?\t\n" +
@@ -102,6 +115,8 @@ public class NewMemberChat
                         await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
                             $"Die Regeln wurden von @{UserName} akzeptiert.");
 
+                        _logger.LogDebug("[{chatId}] {method}", chatId, "QuestionsStartet");
+                        
                         await _careBot.SendTextMessageAsync(
                             update.Message.Chat.Id,
                             "Nun stelle ich dir noch ein paar vorbereitende Fragen, " +
@@ -123,6 +138,9 @@ public class NewMemberChat
                     {
                         WaitingForAnswer = false;
                         CurrentJoinStep = JoinSteps.QuestionsAnswered;
+                        
+                        _logger.LogDebug("[{chatId}] {method}", chatId, nameof(OnSendJoinLink));
+
                         await OnSendJoinLink(update);
                         CurrentJoinStep = JoinSteps.Joined;
                         return;
@@ -131,20 +149,27 @@ public class NewMemberChat
                     CurrentQuestion = Questions[questionIndex];
                     await _careBot.SendChatActionAsync(update.Message.Chat.Id, ChatAction.Typing);
                     Thread.Sleep(2000);
+        
+                    _logger.LogDebug("[{chatId}] {method}({questionIndex})", chatId, nameof(OnAskQuestion), questionIndex);
+                    
                     await OnAskQuestion(update, questionIndex);
                     WaitingForAnswer = true;
                 }
 
                 break;
             case JoinSteps.PrivacyRejected:
+                _logger.LogDebug("[{chatId}] PrivacyRejected", chatId);
                 break;
             case JoinSteps.QuestionsAnswered:
+                _logger.LogDebug("[{chatId}] - QuestionAnswered", chatId);
                 break;
             case JoinSteps.RulesAccepted:
 
                 if (update.Type == UpdateType.ChatJoinRequest)
                 {
                     CurrentJoinStep = JoinSteps.Joined;
+
+                    _logger.LogDebug("[{chatId}] - Finalized", chatId);
 
                     await _careBot.SendTextMessageAsync(update.Message.Chat.Id,
                         "Klasse! Das hat ja super geklappt! ☺️\r\n" +
@@ -158,6 +183,8 @@ public class NewMemberChat
 
                 if (text.ToLower().Contains("ping"))
                 {
+                    _logger.LogDebug("[{chatId}] - Ping", chatId);
+                    
                     await _careBot.SendTextMessageAsync(update.Message.From.Id,
                         $"Alles klar, ich habe die Orga-Mitglieder darüber informiert, dass du ungeduldigt bist.");
                     await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
@@ -166,6 +193,7 @@ public class NewMemberChat
 
                 break;
             default:
+                _logger.LogDebug("[{chatId}] - Wrong JoinStep", chatId);
                 throw new ArgumentOutOfRangeException();
         }
     }
@@ -187,6 +215,8 @@ public class NewMemberChat
 
         var random = new Random();
         var word = ChatSecrets.Values[random.Next(0, ChatSecrets.Values.Count)];
+
+        _logger.LogDebug("{metodName}({word})", nameof(SetSecret), word);
 
         SetSecret(word);
 
@@ -212,6 +242,8 @@ public class NewMemberChat
             "darin ist nämlich auch der nächste Schritt beschrieben, ohne den es nicht weiter geht. 😉");
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
+        _logger.LogDebug("GroupRules sent");
+
     }
 
     private async Task OnSendJoinLink(Update update)
@@ -240,6 +272,8 @@ public class NewMemberChat
         InviteLink = inviteLink;
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}", ParseMode.Markdown);
+
+        _logger.LogDebug("Link sent: {inviteLink}", inviteLink.InviteLink);
     }
 
     private async Task OnStartChat(object? sender, Update update)
@@ -280,5 +314,7 @@ public class NewMemberChat
             {
                 OneTimeKeyboard = true
             });
+
+        _logger.LogDebug("Start Keyboard sent.");
     }
 }

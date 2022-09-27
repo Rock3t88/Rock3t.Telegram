@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rock3t.Telegram.Bots.CareBot;
-using Rock3t.Telegram.Bots.ScaryTerry;
 using Rock3t.Telegram.Bots.ScaryTerry.Config;
 using Rock3t.Telegram.Lib;
 using Rock3t.Telegram.Test.Console;

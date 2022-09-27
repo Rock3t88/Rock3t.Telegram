@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Microsoft.Extensions.Logging;
+using Telegram.Bot;
 using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -11,6 +12,7 @@ namespace Rock3t.Telegram.Lib;
 
 public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 {
+    private readonly ILogger _logger;
     private CancellationToken _cancellationToken = CancellationToken.None;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
@@ -23,8 +25,9 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     public bool IsRunning { get; private set; }
 
-    protected TelegramBot(string token) : base(token)
+    protected TelegramBot(string token, ILogger logger) : base(token)
     {
+        _logger = logger;
         CommandManager = new CommandManager(this);
         CommandManager.ChatStarted += OnChatStarted;
         GameManager = new GameManager();
@@ -53,6 +56,9 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
         if (update.Message?.From == null)
             throw new ArgumentNullException(nameof(update.Message.From));
 
+        _logger.LogDebug("{methodName}({gameType}): {chatId} - {user}",
+            gameType.Name, nameof(OnGameStarted), update.Message.Chat.Id, update.Message.From.Username);
+
         var game = GameManager.Create(gameType, update.Message.From, this);
         await game.StartAsync(update);
 
@@ -61,6 +67,7 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     protected virtual void OnErrorOccured(Exception ex)
     {
+        _logger.LogError(ex.Message);
     }
 
     protected virtual void OnMakeRequest(IRequest request)
@@ -86,10 +93,13 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
     {
         await this.SendChatActionAsync(chatId, ChatAction.Typing, _cancellationToken);
 
+        _logger.LogDebug("{methodName}: {chatId} - {message}", nameof(SendMessage), chatId, message);
+
         //Thread.Sleep(1000);
 
         LastMessage = await this.SendTextMessageAsync(chatId, message, replyMarkup: new ReplyKeyboardMarkup(buttons),
             cancellationToken: _cancellationToken);
+
         return LastMessage;
     }
 
@@ -102,6 +112,8 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     public async Task SendImage(long chatId, Uri uri)
     {
+        _logger.LogDebug("{methodName}: {chatId} - {message}", nameof(SendImage), chatId, uri);
+       
         LastMessage =
             await this.SendPhotoAsync(chatId, new InputOnlineFile(uri), cancellationToken: _cancellationToken);
     }
@@ -112,6 +124,8 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
         foreach (var gameType in GameManager.Games)
         {
+            _logger.LogInformation("{methodName}: Game - {gameType}", nameof(RunAsync), gameType.Name);
+        
             var gameName = gameType.Name;
             var indexOfGame = gameName.IndexOf("Game", StringComparison.Ordinal);
 
@@ -129,14 +143,22 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     public void Stop()
     {
+        _logger.LogInformation("{methodName}", nameof(Stop));
+       
         _cancellationTokenSource.Cancel();
         IsRunning = false;
     }
 
     private async Task OnUpdate(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        GameManager.RunningGames.ForEach(async instance => await instance.Game.DoUpdates(update));
-        CommandManager.DoCommands(update);
+        foreach (var instance in GameManager.RunningGames)
+        {
+            await instance.Game.DoUpdates(update);
+        }
+
+        _logger.LogDebug("{methodName}", nameof(CommandManager.DoCommands));
+
+        await CommandManager.DoCommands(update);
         await OnUpdate(update);
         await Task.CompletedTask;
     }

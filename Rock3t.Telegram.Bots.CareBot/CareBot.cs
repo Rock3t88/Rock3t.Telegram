@@ -2,12 +2,10 @@
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Rock3t.Telegram.Lib;
-using Serilog;
 using Telegram.Bot;
+using Telegram.Bot.Requests;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using YamlDotNet.Serialization;
-using File = System.IO.File;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
@@ -22,62 +20,37 @@ public class CareBot : TelegramBot
 
     private readonly Dictionary<long, NewMemberChat> _privateChats;
     private readonly IOptions<CareBotConfig> _options;
-    private readonly ILogger<CareBot> _logger;
+    public ILogger<CareBot> Logger { get; }
 
     internal CareBotConfig Config { get; }
 
     public bool IsInitialized { get; private set; }
 
-    public CareBot(IOptions<CareBotConfig> options, ILogger<CareBot> logger) : base(options.Value.Token)
+    public CareBot(IOptions<CareBotConfig> options, ILogger<CareBot> logger) : base(options.Value.Token, logger)
     {
         GameManager.Games.Add(typeof(AkinatorGame));
 
-        _logger = logger;
+        Logger = logger;
         _options = options;
         Config = options.Value;
 
-        CommandManager.Commands.Add("lq", new Command("lq", "List questions", async update =>
-        {
-            if (Config.AdminUsers.Contains(update.Message.From.Username))
-            {
-                await this.SendTextMessageAsync(update.Message.Chat.Id,
-                    string.Join("\n", JoinQuestions.Select(q => $"*{JoinQuestions.IndexOf(q)}:* {q.Text}\n")), ParseMode.Markdown);
-            }
-        }));
-        CommandManager.Commands.Add("lr", new Command("lr", "Lists the rules", async update =>
-        {
-            if (Config.AdminUsers.Contains(update.Message.From.Username))
-            {
-                await this.SendTextMessageAsync(update.Message.Chat.Id,
-                    string.Join("\n", Config.GroupRules.Select(r => $"{r}\n")), ParseMode.Markdown);
-            }
-        }));
-     
-
-        if (Config.ClearUpdatesOnStart)
-        {
-            var clearUpdatesTask = this.GetUpdatesAsync();
-            
-            clearUpdatesTask.Wait();
-            var updates = clearUpdatesTask.Result;
-
-            int? offset = null;
-
-            if (updates.Length > 0)
-            {
-            
-                logger.LogWarning("Missed updates: ");
-                foreach (Update update in updates)
-                {
-                    offset = update.Id;
-                    var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
-                    _logger.LogWarning(jsonString);
-                }
-
-                this.GetUpdatesAsync(offset + 1).Wait();
-            }
-        }
-
+        //CommandManager.Commands.Add("lq", new Command("lq", "List questions", async update =>
+        //{
+        //    if (Config.AdminUsers.Contains(update.Message.From.Username))
+        //    {
+        //        await this.SendTextMessageAsync(update.Message.Chat.Id,
+        //            string.Join("\n", JoinQuestions.Select(q => $"*{JoinQuestions.IndexOf(q)}:* {q.Text}\n")), ParseMode.Markdown);
+        //    }
+        //}));
+        //CommandManager.Commands.Add("lr", new Command("lr", "Lists the rules", async update =>
+        //{
+        //    if (Config.AdminUsers.Contains(update.Message.From.Username))
+        //    {
+        //        await this.SendTextMessageAsync(update.Message.Chat.Id,
+        //            string.Join("\n", Config.GroupRules.Select(r => $"{r}\n")), ParseMode.Markdown);
+        //    }
+        //}));
+        
         JoinQuestions = options.Value.Questions;
 
         _privateChats = new();
@@ -103,6 +76,30 @@ public class CareBot : TelegramBot
 
         JoinQuestions = _options.Value.Questions;
 
+        if (Config.ClearUpdatesOnStart)
+        {
+            var clearUpdatesTask = this.GetUpdatesAsync();
+
+            clearUpdatesTask.Wait();
+            var updates = clearUpdatesTask.Result;
+
+            int? offset = null;
+
+            if (updates.Length > 0)
+            {
+
+                Logger.LogWarning("Missed updates: ");
+                foreach (Update update in updates)
+                {
+                    offset = update.Id;
+                    var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
+                    Logger.LogWarning(jsonString);
+                }
+
+                this.GetUpdatesAsync(offset + 1).Wait();
+            }
+        }
+
         IsInitialized = true;
     }
 
@@ -112,7 +109,7 @@ public class CareBot : TelegramBot
 
         var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
 
-        _logger.LogDebug(jsonString);
+        Logger.LogDebug(jsonString);
 
         if (update.Message != null)
         {
@@ -138,10 +135,16 @@ public class CareBot : TelegramBot
 
         if (privateChat == null)
         {
+            Logger.LogDebug("{methodName}: {chatId} - {user}", 
+                nameof(DeclineChatJoinRequest), update.ChatJoinRequest.Chat.Id, update.ChatJoinRequest.From.Username);
+
             await this.DeclineChatJoinRequest(update.ChatJoinRequest.Chat.Id, update.ChatJoinRequest.From.Id);
         }
         else
         {
+            Logger.LogDebug("{methodName}: {chatId} - {user}",
+                nameof(ApproveChatJoinRequest), update.ChatJoinRequest.Chat.Id, update.ChatJoinRequest.From.Username);
+
             await this.ApproveChatJoinRequest(update.ChatJoinRequest.Chat.Id, update.ChatJoinRequest.From.Id);
             await this.RevokeChatInviteLinkAsync(update.ChatJoinRequest.Chat.Id, privateChat.InviteLink.InviteLink);
         }
@@ -152,23 +155,21 @@ public class CareBot : TelegramBot
         if (update.Message == null)
             return;
 
+        Logger.LogDebug("{methodName}: {chatId} - {user}",
+            nameof(OnChatStarted), update.Message.Chat.Id, update.Message.From.Username);
+
         var chatId = update.Message.Chat.Id;
 
         if (_privateChats.ContainsKey(update.Message.From.Id))
-        {
-            return;
-        }
-        else
-        {
-            var memberChat = new NewMemberChat(
-                chatId, update.Message.From.Id,
-                update.Message.From.Username, this, JoinQuestions.ToArray());
+            _privateChats.Remove(update.Message.From.Id);
 
-            await memberChat.Execute(update);
+        var memberChat = new NewMemberChat(
+            chatId, update.Message.From.Id,
+            update.Message.From.Username, this, JoinQuestions.ToArray());
 
-            _privateChats.Add(
-                chatId, memberChat);
-        }
+        await memberChat.Execute(update);
+
+        _privateChats.Add(chatId, memberChat);
 
         base.OnChatStarted(sender, update);
         await Task.CompletedTask;
@@ -178,6 +179,9 @@ public class CareBot : TelegramBot
     {
         if (update.Message == null)
             return;
+
+        Logger.LogDebug("{methodName}: {chatId} - {user}",
+            nameof(OnChatAccepted), update.Message.Chat.Id, update.Message.From.Username);
 
         var chatId = update.Message.Chat.Id;
 

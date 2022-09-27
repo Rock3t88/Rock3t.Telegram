@@ -1,7 +1,6 @@
 ﻿using Akinator.Api.Net.Enumerations;
 using Microsoft.Extensions.Logging;
 using Rock3t.Telegram.Lib.Akinator;
-using Serilog;
 using Telegram.Bot.Types;
 
 namespace Rock3t.Telegram.Lib;

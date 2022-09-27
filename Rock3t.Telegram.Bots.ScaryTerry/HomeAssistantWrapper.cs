@@ -1,5 +1,4 @@
-﻿using Rock3t.Telegram.Lib;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry;

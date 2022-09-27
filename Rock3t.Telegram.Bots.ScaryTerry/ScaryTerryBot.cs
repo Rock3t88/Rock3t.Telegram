@@ -30,7 +30,7 @@ public class ScaryTerryBot : TelegramBot
 
     private readonly Dictionary<long, string> _chatIdToService = new();
 
-    public ScaryTerryBot(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBot> logger) : base(options.Value.Token)
+    public ScaryTerryBot(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBot> logger) : base(options.Value.Token, logger)
     {
         _ha = new HomeAssistantWrapper(this);
         _logger = logger;

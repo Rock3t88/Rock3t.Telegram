@@ -25,7 +25,7 @@ public class CommandManager
         return Task.CompletedTask;
     }
 
-    public void DoCommands(Update update)
+    public async Task DoCommands(Update update)
     {
         var text = update.Message?.Text;
 
@@ -47,8 +47,7 @@ public class CommandManager
 
             if (Commands.ContainsKey(cmd))
             {
-                var retValue = Commands[cmd].ExecuteAsync(update);
-                Console.WriteLine(retValue);
+                await  Commands[cmd].ExecuteAsync(update);
             }
         }
     }
