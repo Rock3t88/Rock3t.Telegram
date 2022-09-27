@@ -255,25 +255,26 @@ public class NewMemberChat
         var sb = new StringBuilder();
         sb.AppendLine("Bravo! Du hast es fasst geschafft! 🥳");
         sb.AppendLine();
-        sb.AppendLine(
-            "Als nächstes schicke ich dir einen Link für den Zutritt in unser Foyer. " +
-            "Beachte dass dieser Link nur *für dich 24 Stunden gültig* ist und genau *ein Mal* benutzt werden kann. " +
-            "Danach wird sich ein Orga-Mitglied sobald wie möglich bei dir melden.");
+        sb.AppendLine("Als nächstes wird sich ein Orga-Mitglied zeitnah bei dir melden.");
+        //sb.AppendLine(
+        //    "Als nächstes schicke ich dir einen Link für den Zutritt in unser Foyer. " +
+        //    "Beachte dass dieser Link nur *für dich 24 Stunden gültig* ist und genau *ein Mal* benutzt werden kann. " +
+        //    "Danach wird sich ein Orga-Mitglied sobald wie möglich bei dir melden.");
 
         await _careBot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
 
-        var linkTime = DateTime.Now;
-        linkTime = linkTime.AddHours(24);
+        //var linkTime = DateTime.Now;
+        //linkTime = linkTime.AddHours(24);
 
-        var inviteLink =
-            await _careBot.CreateChatInviteLinkAsync(
-                _careBot.FoyerChannelId, "CG/L - NRW - Foyer", linkTime);
+        //var inviteLink =
+        //    await _careBot.CreateChatInviteLinkAsync(
+        //        _careBot.FoyerChannelId, "CG/L - NRW - Foyer", linkTime);
 
-        InviteLink = inviteLink;
+        //InviteLink = inviteLink;
 
-        await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}", ParseMode.Markdown);
+        //await _careBot.SendTextMessageAsync(update.Message.Chat.Id, $"Bitteschön: {inviteLink.InviteLink}", ParseMode.Markdown);
 
-        _logger.LogDebug("Link sent: {inviteLink}", inviteLink.InviteLink);
+        //_logger.LogDebug("Link sent: {inviteLink}", inviteLink.InviteLink);
     }
 
     private async Task OnStartChat(object? sender, Update update)

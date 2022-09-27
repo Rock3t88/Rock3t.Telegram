@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="config\appsettings.Development.json.bak" />
+    <None Remove="config\appsettings.json.bak" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="config\appsettings.Development.json.bak" />
+    <Content Include="config\appsettings.json.bak" />
     <Content Include="_DEBUG\config\wordlist.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
