@@ -166,8 +166,7 @@ public class CareBot : TelegramBot
             _privateChats.Remove(update.Message.From.Id);
 
         var memberChat = new NewMemberChat(
-            chatId, update.Message.From.Id,
-            update.Message.From.Username, this, JoinQuestions.ToArray());
+            chatId, update.Message.From, this, JoinQuestions.ToArray());
 
         await memberChat.Execute(update);
 
