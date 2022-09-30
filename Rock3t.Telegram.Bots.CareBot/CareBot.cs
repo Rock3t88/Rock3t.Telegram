@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Globalization;
+using System.Reflection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Rock3t.Telegram.Lib;
@@ -6,6 +8,7 @@ using Serilog;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using YamlDotNet.Serialization;
 using File = System.IO.File;
 
@@ -13,6 +16,8 @@ namespace Rock3t.Telegram.Bots.CareBot;
 
 public class CareBot : TelegramBot
 {
+    private AboutMeDatabase _aboutMeDb;
+
     public List<long> AllowedGroupIds { get; private set; }
     public List<long> AllowedChannelIds { get; set; }
     public long AdminChannelId { get; private set; }
@@ -23,6 +28,7 @@ public class CareBot : TelegramBot
     private readonly Dictionary<long, NewMemberChat> _privateChats;
     private readonly IOptions<CareBotConfig> _options;
     private readonly ILogger<CareBot> _logger;
+    private Dictionary<long, int> _aboutMeSteps;
 
     internal CareBotConfig Config { get; }
 
@@ -30,29 +36,33 @@ public class CareBot : TelegramBot
 
     public CareBot(IOptions<CareBotConfig> options, ILogger<CareBot> logger) : base(options.Value.Token)
     {
-        GameManager.Games.Add(typeof(AkinatorGame));
+        _aboutMeSteps = new Dictionary<long, int>();
+
+        GameManager.Add<AkinatorGame>();
 
         _logger = logger;
         _options = options;
         Config = options.Value;
 
-        CommandManager.Commands.Add("lq", new Command("lq", "List questions", async update =>
-        {
-            if (Config.AdminUsers.Contains(update.Message.From.Username))
-            {
-                await this.SendTextMessageAsync(update.Message.Chat.Id,
-                    string.Join("\n", JoinQuestions.Select(q => $"*{JoinQuestions.IndexOf(q)}:* {q.Text}\n")), ParseMode.Markdown);
-            }
-        }));
-        CommandManager.Commands.Add("lr", new Command("lr", "Lists the rules", async update =>
-        {
-            if (Config.AdminUsers.Contains(update.Message.From.Username))
-            {
-                await this.SendTextMessageAsync(update.Message.Chat.Id,
-                    string.Join("\n", Config.GroupRules.Select(r => $"{r}\n")), ParseMode.Markdown);
-            }
-        }));
+        _aboutMeDb = new AboutMeDatabase();
+        //CommandManager.Commands.Add("lq", new Command("lq", "List questions", async update =>
+        //{
+        //    if (Config.AdminUsers.Contains(update.Message.From.Username))
+        //    {
+        //        await this.SendTextMessageAsync(update.Message.Chat.Id,
+        //            string.Join("\n", JoinQuestions.Select(q => $"*{JoinQuestions.IndexOf(q)}:* {q.Text}\n")), ParseMode.Markdown);
+        //    }
+        //}));
+        //CommandManager.Commands.Add("lr", new Command("lr", "Lists the rules", async update =>
+        //{
+        //    if (Config.AdminUsers.Contains(update.Message.From.Username))
+        //    {
+        //        await this.SendTextMessageAsync(update.Message.Chat.Id,
+        //            string.Join("\n", Config.GroupRules.Select(r => $"{r}\n")), ParseMode.Markdown);
+        //    }
+        //}));
      
+        CommandManager.Add("aboutme", "Infotext", OnAboutMe);
 
         if (Config.ClearUpdatesOnStart)
         {
@@ -86,6 +96,129 @@ public class CareBot : TelegramBot
         AllowedChannelIds = new List<long>();
     }
 
+    private async Task OnAboutMe(Update update)
+    {
+        var from = update.Message.From;
+
+        if (from == null)
+        {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var props =
+            typeof(AboutMeEntity)
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(p =>
+                {
+                    string pName = p.Name.ToLower();
+                    return pName != "id" && pName != "username" && pName != "telegramname" && pName != "name";
+                }).ToArray();
+
+        int maxSteps = props.Length;
+
+        var aboutMe = _aboutMeDb.GetItems<AboutMeEntity>().FirstOrDefault(entity => entity.UserId.Equals(from.Id));
+        
+        if (aboutMe == null)
+        {
+            if (!_aboutMeSteps.ContainsKey(from.Id))
+            {
+              
+                _aboutMeSteps.Add(from.Id, -1);
+
+                await this.SendTextMessageAsync(update.Message.Chat.Id,
+                    "Wie ich sehe hast du noch kein Profil. Dann kannst du es jetzt anlegen :)\nFangen wir doch mal mit deinem Name an, wie heißt du?",
+                    replyToMessageId: update.Message.MessageId);
+            }
+            else
+            {
+                aboutMe = new AboutMeEntity(from.Id, from.FirstName, from.Username);
+                aboutMe.Name = update.Message.Text;
+                _aboutMeDb.InsertItem(aboutMe);
+
+                _aboutMeSteps[from.Id]++;
+
+                await this.SendTextMessageAsync(update.Message.Chat.Id,
+                    $"{props[_aboutMeSteps[from.Id]].Name.Replace('_', ' ')}?",
+                    replyToMessageId: update.Message.MessageId);
+            }
+
+
+            //await this.SendTextMessageAsync(update.Message.Chat.Id, props[_aboutMeSteps[from.Id]].Name);
+            
+            return;
+
+            aboutMe = new AboutMeEntity(from.Id, from.FirstName, from.Username);
+            aboutMe.Geburtsdatum = "09.03.1988";
+            aboutMe.Geschlecht = "Trans*weiblich";
+            aboutMe.Wohnort = "Wuppertal";
+            aboutMe.TelegramName = "Leonie";
+            aboutMe.Andere_Plattformen = "KuMu: little-leonie";
+            aboutMe.Privat_anschreiben_erlaubt = "Privat anschreiben okay.";
+            _aboutMeDb.InsertItem(aboutMe);
+
+        }
+        else
+        {
+            if (_aboutMeSteps.ContainsKey(from.Id))
+            {
+                if (_aboutMeSteps[from.Id] == 0)
+                {
+                 
+                }
+                else if (_aboutMeSteps[from.Id] == maxSteps)
+                {
+                    _aboutMeSteps.Remove(from.Id);
+                }
+                else
+                {
+                    props[_aboutMeSteps[from.Id]].SetValue(aboutMe, update.Message.Text);
+                    _aboutMeDb.UpdateItem(aboutMe);
+
+                    _aboutMeSteps[from.Id]++;
+
+                    if (_aboutMeSteps[from.Id] < maxSteps)
+                    {
+                        await this.SendTextMessageAsync(update.Message.Chat.Id,
+                            $"{props[_aboutMeSteps[from.Id]].Name.Replace('_', ' ')}?",
+                            replyToMessageId: update.Message.MessageId);
+                    }
+                    else
+                    {
+                        _aboutMeSteps.Remove(from.Id);
+
+                        await this.SendTextMessageAsync(update.Message.Chat.Id,
+                            $"Wunderbar. So sieht dein Profil nun aus:",
+                            replyToMessageId: update.Message.MessageId);
+
+                        string aboutMeHtmlTmp = await File.ReadAllTextAsync("./templates/aboutme.html");
+
+                        foreach (var property in typeof(AboutMeEntity).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                        {
+                            aboutMeHtmlTmp =
+                                aboutMeHtmlTmp.Replace($"{{{property.Name.ToUpper()}}}",
+                                    property.GetValue(aboutMe)?.ToString(), true, CultureInfo.CurrentCulture);
+                        }
+
+                        await this.SendTextMessageAsync(update.Message.Chat.Id, aboutMeHtmlTmp, ParseMode.Html);
+                    }
+                }
+                return;
+            }
+
+            string aboutMeHtml = await File.ReadAllTextAsync("./templates/aboutme.html");
+
+            foreach (var property in typeof(AboutMeEntity).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                aboutMeHtml =
+                    aboutMeHtml.Replace($"{{{property.Name.ToUpper()}}}",
+                        property.GetValue(aboutMe)?.ToString(), true, CultureInfo.CurrentCulture);
+            }
+
+            await this.SendTextMessageAsync(update.Message.Chat.Id, aboutMeHtml, ParseMode.Html);
+        }
+    }
+
     public void Initialize()
     {
         _privateChats.Clear();
@@ -108,6 +241,17 @@ public class CareBot : TelegramBot
 
     protected override async Task OnUpdate(Update update)
     {
+        if (_aboutMeSteps.ContainsKey(update.Message.From.Id) && _aboutMeSteps[update.Message.From.Id] == -1)
+        {
+            _aboutMeSteps[update.Message.From.Id] = 0;
+            return;
+        }
+        else if (_aboutMeSteps.ContainsKey(update.Message.From.Id) && _aboutMeSteps[update.Message.From.Id] >= 0)
+        {
+            await OnAboutMe(update);
+            return;
+        }
+
         if (update.Type == UpdateType.ChatJoinRequest) await OnNewChannelMemberJoined(update);
 
         var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
