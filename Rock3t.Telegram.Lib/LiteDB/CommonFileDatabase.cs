@@ -71,4 +71,13 @@ public class CommonFileDatabase : FileDatabase
             return itemCollection.Query().ToArray();
         }
     }
+
+    public ILiteQueryable<T> Query<T>()
+    {
+        using (var db = new LiteDatabase(DatabaseFullName))
+        {
+            var itemCollection = db.GetCollection<T>();
+            return itemCollection.Query();
+        }
+    }
 }

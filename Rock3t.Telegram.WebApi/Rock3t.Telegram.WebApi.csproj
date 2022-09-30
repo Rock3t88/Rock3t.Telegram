@@ -29,4 +29,9 @@
     <ProjectReference Include="..\Rock3t.Telegram.Lib\Rock3t.Telegram.Lib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="db\" />
+    <Folder Include="templates\" />
+  </ItemGroup>
+
 </Project>

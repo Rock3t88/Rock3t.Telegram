@@ -25,6 +25,15 @@ public class CommandManager
         return Task.CompletedTask;
     }
 
+    public void Add(string cmd, string description, Func<Update, Task> func)
+    {
+        if (!Commands.ContainsKey(cmd.ToLower()))
+        {
+            Command command = new Command(cmd.ToLower(), description, func);
+            Commands.Add(cmd.ToLower(), command);
+        }
+    }
+
     public void DoCommands(Update update)
     {
         var text = update.Message?.Text;

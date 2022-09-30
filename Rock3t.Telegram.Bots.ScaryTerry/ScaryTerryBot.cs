@@ -77,7 +77,7 @@ public class ScaryTerryBot : TelegramBot
 
         _logger.LogInformation("Registered random events: {0}", Config.RandomActions.Count);
 
-        GameManager.Games.Add(typeof(AkinatorGame));
+        GameManager.Add<AkinatorGame>();
         
         LogConfiguration();
     }
