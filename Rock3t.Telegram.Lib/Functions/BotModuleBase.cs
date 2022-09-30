@@ -17,7 +17,6 @@ public interface IBotModule
 public abstract class BotModuleBase : IBotModule
 {
     private readonly Dictionary<string, IBotModule> _subModules;
-    private readonly Dictionary<string, Command> _commands;
 
     public ITelegramBot Bot { get; }
     public abstract Guid Id { get; }
@@ -53,7 +52,6 @@ public abstract class BotModuleBase : IBotModule
 
     private BotModuleBase(string name, ITelegramBot bot)
     {
-        _commands = new Dictionary<string, Command>();
         _subModules = new Dictionary<string, IBotModule>();
 
         CommandManager = new CommandManager(bot);

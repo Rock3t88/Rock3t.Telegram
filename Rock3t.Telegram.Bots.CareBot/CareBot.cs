@@ -16,7 +16,8 @@ namespace Rock3t.Telegram.Bots.CareBot;
 
 public class CareBot : TelegramBot
 {
-    private AboutMeDatabase _aboutMeDb;
+    private readonly AboutMeDatabase _aboutMeDb;
+    private readonly Dictionary<long, int> _aboutMeSteps;
 
     public List<long> AllowedGroupIds { get; private set; }
     public List<long> AllowedChannelIds { get; set; }
@@ -28,7 +29,6 @@ public class CareBot : TelegramBot
     private readonly Dictionary<long, NewMemberChat> _privateChats;
     private readonly IOptions<CareBotConfig> _options;
     private readonly ILogger<CareBot> _logger;
-    private Dictionary<long, int> _aboutMeSteps;
 
     internal CareBotConfig Config { get; }
 
@@ -62,7 +62,7 @@ public class CareBot : TelegramBot
         //    }
         //}));
      
-        CommandManager.Add("aboutme", "Infotext", OnAboutMe);
+        //ToDo: CommandManager.Add("aboutme", "Infotext", OnAboutMe);
 
         if (Config.ClearUpdatesOnStart)
         {
