@@ -204,6 +204,11 @@ public class NewMemberChat
                         await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
                             $"{Name} hat gepingt.");
                     }
+                    else
+                    {
+                        await _careBot.SendTextMessageAsync(_careBot.AdminChannelId,
+                            $"*Nachricht von {Name}:*\n{update.Message.Text}");
+                    }
 
                     break;
                 default:
