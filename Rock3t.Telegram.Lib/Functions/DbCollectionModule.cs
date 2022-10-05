@@ -14,9 +14,9 @@ public class DbCollectionModule : CollectionModuleBase<IDatabaseEntity>
         _db = new CommonFileDatabase();
     }
 
-    protected override Task OnAddListItem(Update update)
+    protected Task OnAddListItem(Update update)
     {
-            
-        return base.OnAddListItem(update);
+        return Task.CompletedTask;  
+        //return base.OnAddListItem(update);
     }
 }

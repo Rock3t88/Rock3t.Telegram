@@ -45,7 +45,7 @@ public class CareBot : TelegramBot
         Config = options.Value;
 
         _aboutMeDb = new AboutMeDatabase();
-        //CommandManager.Commands.Add("lq", new Command("lq", "List questions", async update =>
+        //CommandManager.Commands.AddAction("lq", new CommandBase("lq", "List questions", async update =>
         //{
         //    if (Config.AdminUsers.Contains(update.Message.From.Username))
         //    {
@@ -53,7 +53,7 @@ public class CareBot : TelegramBot
         //            string.Join("\n", JoinQuestions.Select(q => $"*{JoinQuestions.IndexOf(q)}:* {q.Text}\n")), ParseMode.Markdown);
         //    }
         //}));
-        //CommandManager.Commands.Add("lr", new Command("lr", "Lists the rules", async update =>
+        //CommandManager.Commands.AddAction("lr", new CommandBase("lr", "Lists the rules", async update =>
         //{
         //    if (Config.AdminUsers.Contains(update.Message.From.Username))
         //    {
@@ -62,7 +62,7 @@ public class CareBot : TelegramBot
         //    }
         //}));
      
-        //ToDo: CommandManager.Add("aboutme", "Infotext", OnAboutMe);
+        //ToDo: CommandManager.AddAction("aboutme", "Infotext", OnAboutMe);
 
         if (Config.ClearUpdatesOnStart)
         {

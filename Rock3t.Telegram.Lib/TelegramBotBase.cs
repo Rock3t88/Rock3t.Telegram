@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using Rock3t.Telegram.Lib.Commands;
+using Telegram.Bot;
 using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -119,7 +120,7 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
                 gameName = gameName.Substring(0, indexOfGame);
 
             CommandManager.Commands.Add(gameName.ToLower(),
-                new Command(gameName.ToLower(), $"Spiele eine Runde {gameName}",
+                new ActionCommand(gameName.ToLower(), $"Spiele eine Runde {gameName}",
                     update => OnGameStarted(update, gameType)));
         }
 

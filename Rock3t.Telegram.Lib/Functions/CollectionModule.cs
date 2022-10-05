@@ -19,12 +19,12 @@ public abstract class CollectionModuleBase<T> : BotModuleBase
 
     protected virtual void InitCommands()
     {
-        CommandManager.Add("add", "Add list item", OnAddListItem);
-        CommandManager.Add("show", "Show list items", OnShowItems);
-        CommandManager.Add("remove", "Remove list item", OnRemoveItem);
+        CommandManager.AddAction("show", "Show list items", OnShowItems);
+        CommandManager.AddAction<string>("add", "AddAction list item", OnAddListItem);
+        CommandManager.AddAction<int>("remove", "Remove list item", OnRemoveItem);
     }
 
-    protected virtual async Task OnAddListItem(Update update)
+    protected virtual async Task OnAddListItem(Update update, string[] strings)
     {
         await Task.CompletedTask;
     }
@@ -34,7 +34,7 @@ public abstract class CollectionModuleBase<T> : BotModuleBase
         await Task.CompletedTask;
     }
 
-    protected virtual async Task OnRemoveItem(Update update)
+    protected virtual async Task OnRemoveItem(Update update, int[] ids)
     {
         await Task.CompletedTask;
     }

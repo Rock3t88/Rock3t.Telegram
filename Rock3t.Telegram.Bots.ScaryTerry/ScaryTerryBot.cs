@@ -158,7 +158,7 @@ public class ScaryTerryBot : TelegramBot
 
                 Match match = regex.Match(telegramCommand.command);
 
-                _logger.LogInformation("Command received: {0}", telegramCommand.command);
+                _logger.LogInformation("CommandBase received: {0}", telegramCommand.command);
 
                 string strAction = null;
 
@@ -193,11 +193,11 @@ public class ScaryTerryBot : TelegramBot
                 {
                     TriggerAction(action, telegramCommand.chat_id, notifierService, isRandomAction, currentUser);
 
-                    _logger.LogInformation("Config.Action triggered: {0}", action.Name);
+                    _logger.LogInformation("Config.Function triggered: {0}", action.Name);
                 }
                 else
                 {
-                    _logger.LogWarning("Config.Action not found: {0}", strAction);
+                    _logger.LogWarning("Config.Function not found: {0}", strAction);
                 }
             }
             else if (update.Type == UpdateType.Message)
@@ -314,7 +314,7 @@ public class ScaryTerryBot : TelegramBot
 
                 if (action != null)
                 {
-                    _logger.LogInformation("Message inline command action found: {0}", action.Name);
+                    _logger.LogInformation("Message inline commandBase action found: {0}", action.Name);
                     TriggerAction(action, telegramText.chat_id, notifierService, false, currentUser);
                 }
 
@@ -383,14 +383,14 @@ public class ScaryTerryBot : TelegramBot
 
         foreach (Action action in Config.Actions)
         {
-            _logger.LogInformation("Config.Action {0}: {1}{2}{3}",
+            _logger.LogInformation("Config.Function {0}: {1}{2}{3}",
                 action.Name, action?.MessageService?.Message,
                 action?.SceneService?.Scene, action?.AudioService?.Url);
         }
 
         foreach (Action action in Config.RandomActions)
         {
-            _logger.LogInformation("Random Config.Action {0}: {1}{2}{3}",
+            _logger.LogInformation("Random Config.Function {0}: {1}{2}{3}",
                 action.Name, action?.MessageService?.Message,
                 action?.SceneService?.Scene, action?.AudioService?.Url);
         }

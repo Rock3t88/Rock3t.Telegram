@@ -13,12 +13,12 @@
 //    public CommandManager CommandManager { get; }
 //    public GameManager GameManager { get; }
 
-//    public void Add<T>() where T : class, IBotModule
+//    public void AddAction<T>() where T : class, IBotModule
 //    {
 //        Type moduleType = typeof(T);
 
 //        if (!_modules.Contains(moduleType))
-//            _modules.Add(moduleType);
+//            _modules.AddAction(moduleType);
 //    }
 
 //    public void Remove<T>() where T : class, IBotModule
@@ -37,17 +37,17 @@
 //        {
 //            IBotModule instance = (IBotModule)Activator.CreateInstance(module)!;
 
-//            foreach (KeyValuePair<string, Command> command in instance.Commands)
+//            foreach (KeyValuePair<string, CommandBase> commandBase in instance.Commands)
 //            {
-//                CommandManager.Commands.Add(command.Key, command.Value);
+//                CommandManager.Commands.AddAction(commandBase.Key, commandBase.Value);
 //            }
 
 //            foreach (Type game in instance.Games)
 //            {
-//                GameManager.Add<AkinatorGame>();
+//                GameManager.AddAction<AkinatorGame>();
 //            }
 
-//            _instances.Add(module, instance);
+//            _instances.AddAction(module, instance);
 //        }
 //    }
 
