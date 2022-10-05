@@ -5,7 +5,6 @@ namespace Rock3t.Telegram.Bots.ScaryTerry.Config;
 public class ScaryTerryConfig : BotConfig
 {
     public string Title { get; set; }
-    public long MainChatId { get; set; }
     public string DefaultWelcomeMessage { get; set; }
     public string DefaultMessage { get; set; }
     public string DefaultRecipientMessage { get; set; }

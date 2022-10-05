@@ -1,4 +1,5 @@
 ﻿using Rock3t.Telegram.Lib.Commands;
+using Rock3t.Telegram.Lib.Functions;
 using Telegram.Bot;
 using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
@@ -20,12 +21,18 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
     protected CommandManager CommandManager { get; }
     protected GameManager GameManager { get; }
 
+    public List<IBotModule> Modules { get; }
+
+    public abstract IBotConfig Config { get; }
+
     public Message? LastMessage { get; private set; }
 
     public bool IsRunning { get; private set; }
 
     protected TelegramBot(string token) : base(token)
     {
+        Modules = new List<IBotModule>();
+
         CommandManager = new CommandManager(this);
         CommandManager.ChatStarted += OnChatStarted;
         GameManager = new GameManager();
@@ -70,6 +77,9 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     protected virtual async Task OnUpdate(Update update)
     {
+        GameManager.RunningGames.ForEach(async instance => await instance.Game.DoUpdates(update));
+        await CommandManager.DoCommands(update);
+
         if (update.Message?.Chat.Type == ChatType.Private)
             if (update.Message?.Text?.ToLower() == "einverstanden")
                 await OnChatAccepted(update);
@@ -136,8 +146,6 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     private async Task OnUpdate(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        GameManager.RunningGames.ForEach(async instance => await instance.Game.DoUpdates(update));
-        CommandManager.DoCommands(update);
         await OnUpdate(update);
         await Task.CompletedTask;
     }

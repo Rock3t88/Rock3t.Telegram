@@ -1,4 +1,6 @@
 ﻿using Rock3t.Telegram.Bots.CareBot;
+using Rock3t.Telegram.Bots.ScaryTerry;
+using Rock3t.Telegram.Bots.ScaryTerry.Config;
 using Rock3t.Telegram.Lib;
 
 namespace Rock3t.Telegram.WebApi;
@@ -21,6 +23,7 @@ public class Startup
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
         services.AddSingleton<CareBot>();
+        services.AddSingleton<ScaryTerryBot>();
 
         foreach (var botConfig in Configuration.GetSection("Bots").GetChildren())
         {
@@ -28,6 +31,8 @@ public class Startup
 
             if (name.ToLower().Equals("carebot"))
                 services.Configure<CareBotConfig>(botConfig);
+            else if (name.ToLower().Equals("scaryterry"))
+                services.Configure<ScaryTerryConfig>(botConfig);
             else
                 services.Configure<BotConfig>(botConfig);
         }

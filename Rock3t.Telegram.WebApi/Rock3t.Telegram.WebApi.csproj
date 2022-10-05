@@ -26,11 +26,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Rock3t.Telegram.Bots.CareBot\Rock3t.Telegram.Bots.CareBot.csproj" />
+    <ProjectReference Include="..\Rock3t.Telegram.Bots.ScaryTerry\Rock3t.Telegram.Bots.ScaryTerry.csproj" />
     <ProjectReference Include="..\Rock3t.Telegram.Lib\Rock3t.Telegram.Lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="db\" />
+    <Folder Include="opfergaben.db\" />
     <Folder Include="templates\" />
   </ItemGroup>
 

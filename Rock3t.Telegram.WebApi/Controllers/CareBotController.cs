@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Rock3t.Telegram.Bots.CareBot;
+using Rock3t.Telegram.Bots.ScaryTerry;
 
 namespace Rock3t.Telegram.WebApi.Controllers;
 
@@ -34,12 +35,12 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
 
             if (careBot.IsRunning)
                 throw new InvalidOperationException("CareBot is already running.");
 
-            careBot.Initialize();
+            //ToDo!!! careBot.Initialize();
             _careBotTask = careBot.RunAsync();
 
             return true;
@@ -56,7 +57,7 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
 
             if (!careBot.IsRunning)
                 throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
@@ -77,13 +78,13 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<CareBot>();
+            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
 
             if (!careBot.IsRunning)
                 throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
 
             careBot.Stop();
-            careBot.Initialize();
+            //ToDo!!! careBot.Initialize();
             _careBotTask = careBot.RunAsync();
             
             return true;

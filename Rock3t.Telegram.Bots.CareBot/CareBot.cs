@@ -30,7 +30,9 @@ public class CareBot : TelegramBot
     private readonly IOptions<CareBotConfig> _options;
     private readonly ILogger<CareBot> _logger;
 
-    internal CareBotConfig Config { get; }
+    internal CareBotConfig _config { get; }
+
+    public override IBotConfig Config => _config;
 
     public bool IsInitialized { get; private set; }
 
@@ -42,7 +44,7 @@ public class CareBot : TelegramBot
 
         _logger = logger;
         _options = options;
-        Config = options.Value;
+        _config = options.Value;
 
         _aboutMeDb = new AboutMeDatabase();
         //CommandManager.Commands.AddAction("lq", new CommandBase("lq", "List questions", async update =>
@@ -64,7 +66,7 @@ public class CareBot : TelegramBot
      
         //ToDo: CommandManager.AddAction("aboutme", "Infotext", OnAboutMe);
 
-        if (Config.ClearUpdatesOnStart)
+        if (_config.ClearUpdatesOnStart)
         {
             var clearUpdatesTask = this.GetUpdatesAsync();
             

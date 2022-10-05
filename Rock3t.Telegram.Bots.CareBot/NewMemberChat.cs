@@ -193,7 +193,7 @@ public class NewMemberChat
         StringBuilder groupRulesBuilder = new StringBuilder();
         groupRulesBuilder.AppendLine("*Gruppenregeln*");
 
-        foreach (var rule in _careBot.Config.GroupRules)
+        foreach (var rule in _careBot._config.GroupRules)
         {
             groupRulesBuilder.AppendLine();
             groupRulesBuilder.AppendLine(rule);

@@ -16,7 +16,7 @@ public class CommandManager
     {
         Bot = bot;
         Commands.Add("hilfe", new ActionCommand("hilfe", "Listet alle Commands auf.", GetHelp));
-        Commands.Add("start", new ActionCommand("start", "Startet einen Chat mit Carebot.", OnChatStart));
+        Commands.Add("start", new ActionCommand("start", "Startet einen Chat.", OnChatStart));
     }
 
     private Task OnChatStart(Update update)
@@ -50,12 +50,12 @@ public class CommandManager
         }
     }
 
-    public async Task<object?> DoCommands(Update update)
+    public async Task<bool> DoCommands(Update update)
     {
         var text = update.Message?.Text;
 
         if (string.IsNullOrWhiteSpace(text))
-            await Task.CompletedTask;
+            return false;
 
         var cmdRegex = new Regex(@"\/(?<command>\S+)( )?(?<value>.*)?", RegexOptions.IgnoreCase);
 
@@ -72,18 +72,18 @@ public class CommandManager
                 {
                     var result = await Commands[cmd].ExecuteAsync(update);
                     Console.WriteLine(result);
-                    return result;
+                    return true;
                 }
                 else
                 {
                     var result = await Commands[cmd].ExecuteAsync(update, value);
                     Console.WriteLine(result);
-                    return result;
+                    return true;
                 }
             }
         }
 
-        return Task.CompletedTask;
+        return false;
     }
 
     private async Task GetHelp(Update update)
