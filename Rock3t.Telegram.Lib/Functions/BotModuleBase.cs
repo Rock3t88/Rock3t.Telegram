@@ -10,7 +10,7 @@ public interface IBotModule
 {
     Guid Id { get; }
     string Name { get; }
-    
+    Task<bool> OnUpdate(Update update);
     CommandManager CommandManager { get; }
     IReadOnlyCollection<IBotModule> SubModules { get; }
 }
@@ -46,6 +46,8 @@ public abstract class BotModuleBase : IBotModule
             _subModules.Remove(key);
         }
     }
+
+    public abstract Task<bool> OnUpdate(Update update);
 
     protected BotModuleBase(ITelegramBot bot, string name) : this(name, bot)
     {

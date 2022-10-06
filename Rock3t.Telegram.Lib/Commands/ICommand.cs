@@ -4,6 +4,7 @@ namespace Rock3t.Telegram.Lib.Commands;
 
 public interface ICommand
 {
+    bool ShowHelp { get; }
     string CommandString { get; }
     string Name { get; }
     string Description { get; }

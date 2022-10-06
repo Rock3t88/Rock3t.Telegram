@@ -5,6 +5,7 @@ using Rock3t.Telegram.Lib.LiteDB;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Rock3t.Telegram.Lib.Functions;
 
@@ -58,7 +59,7 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
     protected virtual async Task OnAddListItems(Update update, params string[] items)
     {
-        await Bot.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
+        //await Bot.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
     
         foreach (string item in items)
         {
@@ -74,10 +75,17 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         await OnShowItems(update);
     }
 
+    InlineKeyboardMarkup _inlineReplyMarkup = new InlineKeyboardMarkup(new[]
+    {
+        InlineKeyboardButton.WithCallbackData("hinzufugen", "add"),
+        InlineKeyboardButton.WithCallbackData("andern", "update"),
+        InlineKeyboardButton.WithCallbackData("entfernen", "delete"),
+    });
+
     protected virtual async Task OnShowItems(Update update)
     {
+        //InlineKeyboardButton.WithCallbackData("hinzufugen", "add")
         //await Bot.DeleteMessageAsync(update.Message.Chat.Id, update.Message.MessageId);
-       
         var users = InternalCollection.DistinctBy(entity => entity.UserName).ToArray();
 
         if (users.Length == 0)
@@ -101,7 +109,10 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         
         if (_listMessageId is null)
         {
-            var message = await Bot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(), ParseMode.Markdown);
+            var message =
+                await Bot.SendTextMessageAsync(update.Message.Chat.Id, sb.ToString(),
+                    ParseMode.Markdown, replyMarkup: _inlineReplyMarkup);
+
             _listMessageId = message.MessageId;
 
             _settings!.ChatId = update.Message.Chat.Id;
@@ -113,7 +124,8 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         }
         else
         {
-            await Bot.EditMessageTextAsync(update.Message.Chat.Id, (int)_listMessageId, sb.ToString(), ParseMode.Markdown);
+            await Bot.EditMessageTextAsync(update.Message.Chat.Id, (int)_listMessageId, sb.ToString(), 
+                ParseMode.Markdown, replyMarkup: _inlineReplyMarkup);
         }
 
         await Task.CompletedTask;
@@ -135,7 +147,16 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
             if (index < items.Length)
             {
                 var id = items[index].Id;
+
+                var item = items[index];
+
                 bool success = await Task.FromResult(_database.DeleteItem<T>(id));
+
+                if (success)
+                {
+                    await Bot.SendTextMessageAsync(update.Message.Chat.Id,
+                        $"{item.Item} wurde von @{item.UserName} entfernt.");
+                }
             }
         }
         await OnShowItems(update);

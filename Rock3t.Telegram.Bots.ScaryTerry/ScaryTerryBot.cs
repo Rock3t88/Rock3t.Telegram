@@ -103,6 +103,8 @@ public class ScaryTerryBot : TelegramBot
             {
                 bool result = await botModule.CommandManager.DoCommands(update);
                 
+                result = await botModule.OnUpdate(update) || result;
+
                 if (!moduleExecuted)
                     moduleExecuted = result;
             }

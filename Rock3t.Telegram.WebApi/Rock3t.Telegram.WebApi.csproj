@@ -32,7 +32,6 @@
 
   <ItemGroup>
     <Folder Include="db\" />
-    <Folder Include="opfergaben.db\" />
     <Folder Include="templates\" />
   </ItemGroup>
 

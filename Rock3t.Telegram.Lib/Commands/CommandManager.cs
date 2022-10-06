@@ -33,19 +33,25 @@ public class CommandManager
     //        Commands.AddAction(cmd.ToLower(), commandBase);
     //    }
     //}
-    public void AddAction(string cmd, string description, Func<Update, Task> func)
+    public void AddAction(string cmd, string description, Func<Update, Task> func, bool showHelp = true)
     {
         if (!Commands.ContainsKey(cmd.ToLower()))
         {
-            CommandBase commandBase = new ActionCommand(cmd.ToLower(), description, func);
+            CommandBase commandBase = new ActionCommand(cmd.ToLower(), description, func)
+            {
+                ShowHelp = showHelp
+            };
             Commands.Add(cmd.ToLower(), commandBase);
         }
     }
-    public void AddAction<T>(string cmd, string description, Func<Update, T[], Task> func)
+    public void AddAction<T>(string cmd, string description, Func<Update, T[], Task> func, bool showHelp = true)
     {
         if (!Commands.ContainsKey(cmd.ToLower()))
         {
-            CommandBase commandBase = new ActionCommand<T>(cmd.ToLower(), description, func);
+            CommandBase commandBase = new ActionCommand<T>(cmd.ToLower(), description, func)
+            {
+                ShowHelp = showHelp
+            };
             Commands.Add(cmd.ToLower(), commandBase);
         }
     }
@@ -92,7 +98,8 @@ public class CommandManager
 
         var sb = new StringBuilder();
 
-        foreach (var item in Commands) sb.AppendLine($"/{item.Key} - {item.Value.Description}");
+        foreach (var item in Commands.Where(pair => pair.Value.ShowHelp)) 
+            sb.AppendLine($"/{item.Key} - {item.Value.Description}");
 
         await Bot.SendMessage(chatId, sb.ToString());
     }

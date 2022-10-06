@@ -1,5 +1,6 @@
-﻿using Rock3t.Telegram.Lib.Commands;
-using Telegram.Bot.Types;
+﻿using Telegram.Bot.Types;
+
+namespace Rock3t.Telegram.Lib.Commands;
 
 public class ActionCommand : CommandBase, IActionCommand
 {

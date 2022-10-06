@@ -6,6 +6,8 @@ public abstract class CommandBase : ICommand
 {
     public abstract Func<Update, object[]?, Task<object?>> Command { get; }
 
+    public virtual bool ShowHelp { get; set; }
+
     public string CommandString { get; }
 
     public string Name { get; }
