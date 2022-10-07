@@ -119,12 +119,14 @@ public class ScaryTerryBot : TelegramBot
     {
         return Task.CompletedTask;
     }
-        
+
     protected override async Task OnUpdate(Update update)
     {
+        _logger.LogDebug(update?.ToString());
+
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         global::Telegram.Bot.Types.User? user = update.CallbackQuery?.From ?? updateMessage?.From;
-        
+
         if (updateMessage == null || updateMessage.Text == null || user?.IsBot == true || updateMessage?.IsAutomaticForward == true)
             return;
 
@@ -166,8 +168,6 @@ public class ScaryTerryBot : TelegramBot
                 {
                 }
             }
-
-            _logger.LogDebug(update?.ToString());
 
             _temporaryTokens = new();
             string notifierService = _chatIdToService[_config.MainChatId];
