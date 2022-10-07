@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Rock3t.Telegram.Bots.ScaryTerry.Config;
@@ -41,6 +42,10 @@ public class ScaryTerryBot : TelegramBot
         _options = options;
         _helper = new();
         _randomActions = new List<Action>(_config.RandomActions);
+
+        _logger.LogInformation(Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ??
+                               Assembly.GetCallingAssembly()?.GetName()?.Version?.ToString() ?? 
+                               Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString());
 
         _db = new ScaryTerryDb();
         _db.DatabaseFileName = "ScaryTerry.db";
