@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Rock3t.Telegram.Bots.CareBot;
-using Rock3t.Telegram.Bots.ScaryTerry;
 
 namespace Rock3t.Telegram.WebApi.Controllers;
 
