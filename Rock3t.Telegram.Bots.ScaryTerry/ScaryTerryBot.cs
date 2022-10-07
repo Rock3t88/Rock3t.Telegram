@@ -130,7 +130,7 @@ public class ScaryTerryBot : TelegramBot
     {
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         global::Telegram.Bot.Types.User? user = update.CallbackQuery?.From ?? updateMessage?.From;
-
+            
         if (updateMessage == null || updateMessage.Text == null || user?.IsBot == true || updateMessage?.IsAutomaticForward == true)
             return;
 
@@ -183,7 +183,9 @@ public class ScaryTerryBot : TelegramBot
             _temporaryTokens = new();
             string notifierService = _chatIdToService[_config.MainChatId];
 
-            string botname = _config.Name;
+            //string botname = _config.Name;
+            string botname = "scary_terry_the_bot";
+
             string to = "";
             Config.Action? action = null;
             TelegramText? telegramText = null;
