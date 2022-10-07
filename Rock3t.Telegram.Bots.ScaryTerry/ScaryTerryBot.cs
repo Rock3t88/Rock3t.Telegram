@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Rock3t.Telegram.Bots.ScaryTerry.Config;
 using Rock3t.Telegram.Bots.ScaryTerry.db;
 using Rock3t.Telegram.Lib;
@@ -45,7 +46,7 @@ public class ScaryTerryBot : TelegramBot
 
         _logger.LogInformation(Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ??
                                Assembly.GetCallingAssembly()?.GetName()?.Version?.ToString() ?? 
-                               Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString());
+                               Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString() + "____1");
 
         _db = new ScaryTerryDb();
         _db.DatabaseFileName = "ScaryTerry.db";
@@ -127,13 +128,14 @@ public class ScaryTerryBot : TelegramBot
 
     protected override async Task OnUpdate(Update update)
     {
-        _logger.LogDebug(update?.ToString());
-
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         global::Telegram.Bot.Types.User? user = update.CallbackQuery?.From ?? updateMessage?.From;
 
         if (updateMessage == null || updateMessage.Text == null || user?.IsBot == true || updateMessage?.IsAutomaticForward == true)
             return;
+
+        var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
+        _logger.LogDebug(jsonString);
 
         try
         {
@@ -159,6 +161,10 @@ public class ScaryTerryBot : TelegramBot
                 if (!moduleExecuted)
                     moduleExecuted = result;
             }
+
+            _logger.LogDebug($"{{{nameof(moduleExecuted)}}}:", moduleExecuted);
+            _logger.LogDebug($"{{{nameof(updateMessage.From.Username)}}}:", updateMessage?.From?.Username);
+            _logger.LogDebug($"{{{nameof(updateMessage.From.IsBot)}}}:", updateMessage?.From?.IsBot);
 
             if (moduleExecuted || updateMessage?.From?.Username == null || updateMessage?.From?.IsBot == true)
                 return;
