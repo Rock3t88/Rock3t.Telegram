@@ -58,7 +58,7 @@ public class ScaryTerryBot : TelegramBot
         _randomWelcomeMessages = new List<string>(_welcomeMessages);
         var users = _db.GetUsers().ToList();
 
-        _logger.LogInformation("ScaryTerryUser Count: {0}", users.Count);
+        _logger.LogInformation("User Count: {0}", users.Count);
 
         foreach (var user in users)
 
@@ -123,7 +123,7 @@ public class ScaryTerryBot : TelegramBot
     protected override async Task OnUpdate(Update update)
     {
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
-        User? user = update.CallbackQuery?.From ?? updateMessage?.From;
+        global::Telegram.Bot.Types.User? user = update.CallbackQuery?.From ?? updateMessage?.From;
         
         if (updateMessage == null || updateMessage.Text == null || user?.IsBot == true || updateMessage?.IsAutomaticForward == true)
             return;
