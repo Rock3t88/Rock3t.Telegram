@@ -48,6 +48,8 @@ public class ScaryTerryBot : TelegramBot
 
         Modules.Add(new SacrificeCollectionModule(this, "opfergaben"));
         
+        CommandManager.AddAction("start_sacrifice", "Beginnt mit der Sammlung der Opfergaben", StartSacrifice, false);
+
         var triggeredWelcomes = _db.GetWelcomeMessages(true);
 
         _welcomeMessages = _db.GetWelcomeMessages(false);
@@ -56,7 +58,7 @@ public class ScaryTerryBot : TelegramBot
         _randomWelcomeMessages = new List<string>(_welcomeMessages);
         var users = _db.GetUsers().ToList();
 
-        _logger.LogInformation("User Count: {0}", users.Count);
+        _logger.LogInformation("ScaryTerryUser Count: {0}", users.Count);
 
         foreach (var user in users)
 
@@ -88,29 +90,82 @@ public class ScaryTerryBot : TelegramBot
         LogConfiguration();
     }
 
+    private async Task StartSacrifice(Update update)
+    {
+        Message? updateMessage = update.Message ?? update.ChannelPost;
+
+        if (updateMessage == null || updateMessage.Chat.Id.Equals(Config.MainChatId))
+            return;
+        
+        await this.DeleteMessageAsync(updateMessage!.Chat.Id, updateMessage.MessageId);
+
+        await this.SendTextMessageAsync(Config.MainChatId,
+            "*Soo ihr Würmchen, nun beginnen wir mal mit der Sammlung eurer Opfergaben!*\n\n" +
+            "Ihr könnte sie in meiner Gruppe der Opfergaben hinzufügen: https://t.me/+cj7dCxegrB0xNTFi\n\n" +
+            "Außerdem gibt es einen Kanal, der euch über Änderungen informiert: https://t.me/+ZmVgwkFdEwxlY2Ni" +
+            "\n\n" +
+            "Um bis dahin nicht zu verhungern, habe ich auch schon eine hinzugefügt WuhahaHAhaHAaA!!!1!1!",
+            ParseMode.Markdown);
+
+        var collectionModule = Modules.FirstOrDefault(module => module is SacrificeCollectionModule) as SacrificeCollectionModule;
+
+        await collectionModule!.InsertItem(updateMessage.Chat.Id, 5426505698, 
+            "scary_terry_the_bot", "Blutige Nudelwürmer");
+
+        await collectionModule.ShowItems(update);
+    }
+
     protected override Task OnChatAccepted(Update update)
     {
         return Task.CompletedTask;
     }
-
+        
     protected override async Task OnUpdate(Update update)
     {
+        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
+        User? user = update.CallbackQuery?.From ?? updateMessage?.From;
+        
+        if (updateMessage == null || updateMessage.Text == null || user?.IsBot == true || updateMessage?.IsAutomaticForward == true)
+            return;
+
         try
         {
+            bool result = await CommandManager.DoCommands(update);
+
+            if (result)
+                return;
+
             bool moduleExecuted = false;
 
             foreach (IBotModule botModule in Modules)
             {
-                bool result = await botModule.CommandManager.DoCommands(update);
-                
-                result = await botModule.OnUpdate(update) || result;
+                result = await botModule.CommandManager.DoCommands(update);
+
+                if (!moduleExecuted)
+                    moduleExecuted = result;
+
+                if (result)
+                    continue;
+
+                result = await botModule.OnUpdate(update);
 
                 if (!moduleExecuted)
                     moduleExecuted = result;
             }
 
-            if (moduleExecuted)
+            if (moduleExecuted || updateMessage?.From?.Username == null || updateMessage?.From?.IsBot == true)
                 return;
+
+            if (updateMessage?.Chat.Id.Equals(Config.AdminChannelId) == true)
+            {
+                try
+                {
+                    await this.DeleteMessageAsync(updateMessage?.Chat.Id, updateMessage.MessageId);
+                }
+                catch (Exception ex)
+                {
+                }
+            }
 
             _temporaryTokens = new();
             string notifierService = _chatIdToService[_config.MainChatId];
@@ -124,7 +179,7 @@ public class ScaryTerryBot : TelegramBot
 
             bool isRandomAction = false;
 
-            string? text = update.Message?.Text;
+            string? text = updateMessage?.Text;
 
             if (text?.StartsWith("/") == true)
             {
@@ -132,11 +187,11 @@ public class ScaryTerryBot : TelegramBot
                 {
                     telegramCommand = new TelegramCommand
                     {
-                        chat_id = update.Message.Chat.Id,
+                        chat_id = updateMessage.Chat.Id,
                         command = text,
-                        from = update.Message.From,
-                        id = update.Message.MessageId,
-                        user_id = update.Message.From.Id
+                        from = user,
+                        id = updateMessage.MessageId,
+                        user_id = user.Id
                     };
                     //telegramCommand = JsonSerializer.Deserialize<TelegramCommand>(data.Value.ToString());
 
@@ -228,11 +283,11 @@ public class ScaryTerryBot : TelegramBot
                     //telegramText = JsonSerializer.Deserialize<TelegramText>(data.Value.ToString());
                     telegramText = new TelegramText
                     {
-                        user_id = update.Message.From.Id,
-                        chat_id = update.Message.Chat.Id,
-                        from = update.Message.From,
-                        id = update.Message.MessageId,
-                        text = update.Message.Text
+                        user_id = user.Id,
+                        chat_id = updateMessage.Chat.Id,
+                        from = user,
+                        id = updateMessage.MessageId,
+                        text = updateMessage.Text
                     };
 
                     if (!_chatIdToService.ContainsKey(telegramText?.chat_id ?? -1))
@@ -311,7 +366,7 @@ public class ScaryTerryBot : TelegramBot
                             ServicesTypes.notify,
                             data: new()
                             {
-                                message = string.Format(logMessage, newUser.Name, newUser.UserId), title = "Scary Terry"
+                                message = string.Format(logMessage, user.FirstName, $"@{user.Username}"), title = "Scary Terry"
                             });
 
                         _db.CreateUser(newUser.UserId, newUser.Name);

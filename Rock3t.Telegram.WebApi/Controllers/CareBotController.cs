@@ -35,12 +35,12 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
 
             if (careBot.IsRunning)
                 throw new InvalidOperationException("CareBot is already running.");
 
-            //ToDo!!! careBot.Initialize();
+            careBot.Initialize();
             _careBotTask = careBot.RunAsync();
 
             return true;
@@ -57,7 +57,7 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
 
             if (!careBot.IsRunning)
                 throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
@@ -78,13 +78,13 @@ public class CareBotController : ControllerBase
     {
         try
         {
-            var careBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
+            var careBot = App.Host.Services.GetRequiredService<CareBot>();
 
             if (!careBot.IsRunning)
                 throw new InvalidOperationException($"{nameof(Stop)} - CareBot is not running!");
 
             careBot.Stop();
-            //ToDo!!! careBot.Initialize();
+            careBot.Initialize();
             _careBotTask = careBot.RunAsync();
             
             return true;

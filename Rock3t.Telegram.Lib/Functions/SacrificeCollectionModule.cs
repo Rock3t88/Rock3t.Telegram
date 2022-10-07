@@ -10,26 +10,48 @@ namespace Rock3t.Telegram.Lib.Functions;
 public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionModuleItem>
 {
     private readonly Dictionary<long, List<int>> _userItemMessage = new();
- 
+
     public SacrificeCollectionModule(ITelegramBot bot, string name, string dbFilePath = "./db", string? dbFilename = null) 
         : base(bot, name, dbFilePath, dbFilename ?? $"{name}.db")
     {
         InitDefaultCommands();
     }
 
-    protected override async Task OnShowItems(Update update)
-    {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
+    //protected override async Task OnShowItems(Update update)
+    //{
+    //    Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
 
-        //await DeleteUserItemMessages(updateMessage?.Chat.Id ?? -1, updateMessage?.From?.Id ?? -1);
-        await base.OnShowItems(update);
-        await DeleteUserItemMessages(updateMessage);
+    //    //await DeleteUserItemMessages(updateMessage?.Chat.Id ?? -1, updateMessage?.From?.Id ?? -1);
+    //    await base.OnShowItems(update);
+    //    await DeleteUserItemMessages(updateMessage);
+    //}
+
+    public async Task ShowItems(Update update)
+    {
+        await OnShowItems(update);
     }
 
     public override async Task<bool> OnUpdate(Update update)
     {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
-        
+        bool retValue = false;
+
+        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
+        User? from = update.CallbackQuery?.From ?? updateMessage?.From;
+
+        if (update.Type == UpdateType.CallbackQuery && !string.IsNullOrWhiteSpace(update.CallbackQuery!.Data) &&
+            update.CallbackQuery!.Data.Equals("/collection_delete_cancel"))
+        {
+            await DeleteMessages.RemoveByUserId(updateMessage.From.Id);
+            //await Bot.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+            return true;
+        }
+        if (update.Type == UpdateType.CallbackQuery && !string.IsNullOrWhiteSpace(update.CallbackQuery!.Data) &&
+            update.CallbackQuery!.Data.Equals("/collection_update_cancel"))
+        {
+            await EditMessages.RemoveByUserId(updateMessage.From.Id);
+            //await Bot.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+            return true;
+        }
         if (update.Type == UpdateType.CallbackQuery && !string.IsNullOrWhiteSpace(update.CallbackQuery!.Data) && 
             update.CallbackQuery!.Data.StartsWith("/collection_delete "))
         {
@@ -38,6 +60,8 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
             var cmdRegex = new Regex(@"\/(?<command>\S+)( )?(?<value>.*)?", RegexOptions.IgnoreCase);
 
             var match = cmdRegex.Match(update.CallbackQuery.Data);
+
+            string? itemToDelete = null;
 
             if (match.Success)
             {
@@ -49,10 +73,29 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
                 if (!canParse)
                     return false;
 
+                itemToDelete = InternalCollection.FirstOrDefault(item => item.Id == guid)?.Value;
+
+                if (updateMessage?.From?.Id != null)
+                {
+                    await DeleteMessages.RemoveByUserId(updateMessage.From.Id);
+                }
                 await RemoveItem(guid);
+
+                if (LastPinnedMessage != null)
+                {
+                    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+
+                    if (chat.PinnedMessage != null)
+                        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+                }
+
+                LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
+                    $"@{from.Username} hat etwas entfernt:\n{itemToDelete}", ParseMode.Markdown);
             }
             await OnShowItems(update);
-            return true;
+
+            //await Bot.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+            retValue = true;
         }
         if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery.Data.StartsWith("/collection_update "))
         {
@@ -64,6 +107,8 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
             var cmdRegex = new Regex(@"\/(?<command>\S+)( )?(?<value>.*)?", RegexOptions.IgnoreCase);
 
             var match = cmdRegex.Match(update.CallbackQuery.Data);
+         
+            string? itemToUpdate = null;
 
             if (match.Success)
             {
@@ -75,63 +120,84 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
                 if (!canParse)
                     return false;
 
+                itemToUpdate = InternalCollection.FirstOrDefault(item => item.Id == guid)?.Value;
+
+                if (updateMessage?.From?.Id != null)
+                {
+                    await EditMessages.RemoveByUserId(updateMessage.From.Id);
+                }
+
                 await OnEditItem(update, guid);
+            
             }
-            return true;
+            //await Bot.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+            retValue = true;
         }
-        
-        bool retValue = await base.OnUpdate(update);
+
+        if (!retValue)
+        {
+            retValue = await base.OnUpdate(update);
+        }
+
+        if (!retValue)
+        {
+            await DeleteUserItemMessages(updateMessage);
+        }
 
         return retValue;
     }
 
-    protected override async Task OnAddListItems(Update update, params string[] items)
-    {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
+    //protected override async Task OnAddListItems(Update update, params string[] items)
+    //{
+    //    Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
 
-        //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
+    //    //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
 
-        await base.OnAddListItems(update, items);
-    }
+    //    await base.OnAddListItems(update, items);
+    //}
     
-    protected override async Task OnUpdateItems(Update update, params string[] ids)
-    {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
+    //protected override async Task OnUpdateItems(Update update, params string[] ids)
+    //{
+    //    Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
 
-        //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
+    //    //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
 
-        await base.OnUpdateItems(update, ids);
+    //    await base.OnUpdateItems(update, ids);
         
-        //if (_userItemMessage.ContainsKey(updateMessage.From.Id))
-        //{
-        //    await OnShowUserItems(update);
-        //}
-    }
+    //    //if (_userItemMessage.ContainsKey(updateMessage.From.Id))
+    //    //{
+    //    //    await OnShowUserItems(update);
+    //    //}
+    //}
 
-    protected override async Task OnRemoveItems(Update update, params string[] ids)
-    {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
+    //protected override async Task OnRemoveItems(Update update, params string[] ids)
+    //{
+    //    Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
 
-        //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
+    //    //AddUserItemMessage(updateMessage?.From?.Id, updateMessage!.MessageId);
 
-        await base.OnRemoveItems(update, ids);
+    //    await base.OnRemoveItems(update, ids);
         
-        //if (_userItemMessage.ContainsKey(updateMessage.From?.Id ?? -1))
-        //{
-        //    await OnShowUserItems(update);
-        //}
-    }
+    //    //if (_userItemMessage.ContainsKey(updateMessage.From?.Id ?? -1))
+    //    //{
+    //    //    await OnShowUserItems(update);
+    //    //}
+    //}
 
     protected override void InitDefaultCommands()
     {
-        CommandManager.AddAction("opfergaben", "Zeige alle Opfergaben", OnShowUserItems);
+        //CommandManager.AddAction("opfergaben", "Zeige alle Opfergaben", OnShowUserItems);
         CommandManager.AddAction<string>("opfergabe", "Füge eine Opfergabe hinzu", async (update, strings) =>
         {
+            if (update.Message != null)
+            {
+                AddMessages.Add(Bot, update.Message);
+            }
             await OnAddListItems(update, strings);
        
         });
         CommandManager.AddAction("collection_show", "Show list items", OnShowItems, false);
-        CommandManager.AddAction<string>("collection_add", "AddAction list item", async (update, strings) =>
+        CommandManager.AddAction<string>("collection_add", "Add list item", async (update, strings) =>
         {
             await OnAddListItems(update, strings);
           
@@ -155,7 +221,7 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
 
     private async Task OnShowUserItems(Update update)
     {
-        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message;
+        Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;;
 
         if (updateMessage?.From?.Id is null)
             return;
@@ -175,7 +241,7 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
 
         for (int i = 0; i < items.Length; i++)
         {
-            sb.AppendLine($"*{i}* {items[i].Item}");
+            sb.AppendLine($"*{i}* {items[i].Value}");
         }
         
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, sb.ToString(),

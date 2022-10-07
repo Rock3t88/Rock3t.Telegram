@@ -58,7 +58,9 @@ public class CommandManager
 
     public async Task<bool> DoCommands(Update update)
     {
-        var text = update.Message?.Text;
+        Message? updateMessage = update.Message ?? update.ChannelPost;
+
+        var text = updateMessage?.Text;
 
         if (string.IsNullOrWhiteSpace(text))
             return false;

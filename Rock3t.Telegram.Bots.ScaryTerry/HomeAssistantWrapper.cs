@@ -45,13 +45,13 @@ public class HomeAssistantWrapper
                 await _bot.SendPhotoAsync(data.target, data.url, data.caption, ParseMode.Markdown);
                 break;
             case ServicesTypes.notify:
-                await _bot.SendTextMessageAsync(_bot.Config.AdminChannelId, data.message, ParseMode.Markdown);
+                //await _bot.SendTextMessageAsync(_bot.Config.FoyerChannelId, data.message, ParseMode.Markdown);
                 break;
             case ServicesTypes.send_voice:
                 await _bot.SendAudioAsync(data.target, data.url, data.caption, ParseMode.Markdown);
                 break;
             case ServicesTypes.scene:
-                await _bot.SendTextMessageAsync(_bot.Config.AdminChannelId, $"Scene executed: {data.entity_id}", ParseMode.Markdown);
+                //await _bot.SendTextMessageAsync(_bot.Config.AdminChannelId, $"Scene executed: {data.entity_id}", ParseMode.Markdown);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(servicesType), servicesType, null);

@@ -6,7 +6,7 @@ public interface ITelegramCollectionEntity : IDatabaseEntity
     long ChatId { get; set; }
     long UserId { get; set; }
     string UserName { get; set; }
-    string Item { get; set; }
+    string Value { get; set; }
 }
 
 public interface IDatabaseEntity
