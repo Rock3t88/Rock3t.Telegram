@@ -167,6 +167,8 @@ public class ScaryTerryBot : TelegramBot
                 }
             }
 
+            _logger.LogDebug(update?.ToString());
+
             _temporaryTokens = new();
             string notifierService = _chatIdToService[_config.MainChatId];
 
