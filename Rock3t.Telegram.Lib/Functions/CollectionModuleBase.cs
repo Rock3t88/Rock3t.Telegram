@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Text;
+using Rock3t.Telegram.Lib.Extensions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -16,8 +17,11 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
     protected CollectionModuleSettings? Settings { get; }
 
-    protected Dictionary<string, int>? ListMessageIds { get; set; }
-   
+    private readonly DefaultEntity<Dictionary<long, int>> _listMessageChatToMessageId;
+
+    protected Dictionary<long, int> ListMessageChatToMessageId => _listMessageChatToMessageId.Value;
+
+
     protected List<UserItemMessage> AddMessages { get; } = new();
     protected List<UserItemMessage> DeleteMessages { get; } = new();
     protected List<UserItemMessage> EditMessages { get; } = new();
@@ -47,13 +51,14 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
         if (Settings is null)
         {
+            _listMessageChatToMessageId = new DefaultEntity<Dictionary<long, int>>();
             Settings = new CollectionModuleSettings();
             Settings.ChatId = bot.Config.MainChatId;
             Database.InsertItem(Settings);
         }
         else
         {
-            ListMessageIds = Settings.ListMessageIds;
+            _listMessageChatToMessageId = Settings.ListMessageChatIdToMessageId;
         }
     }
 
@@ -65,7 +70,7 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
     protected virtual void InitDefaultCommands()
     {
-        CommandManager.AddAction("collection_show", "Show list items", OnShowItems);
+        CommandManager.AddAction("collection_show", "Show list items", async _ => await OnShowItems(_));
         CommandManager.AddAction<string>("collection_add", "AddAction list item", OnAddListItems);
         CommandManager.AddAction<string>("collection_delete_show", "Remove list item", OnRemoveItems);
         CommandManager.AddAction<string>("collection_update_show", "Update list item", OnUpdateItems);
@@ -114,6 +119,14 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
 
+        if (updateMessage?.Chat == null ||
+            (updateMessage.Chat.Id != Bot.Config.AdminChannelId && 
+             updateMessage.Chat.Id != Bot.Config.FoyerChannelId && 
+             updateMessage.Chat.Type != ChatType.Private))
+        {
+            return false;
+        }
+
         if (updateMessage?.ReplyToMessage != null && EditMessages.ContainsMessageId(updateMessage.ReplyToMessage.MessageId))
         {
             //if (updateMessage != null && updateMessage.From != null)
@@ -136,15 +149,15 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
             await Task.FromResult(Database.UpdateItem(item));
 
-            if (LastPinnedMessage != null)
-            {
-                Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+            //if (LastPinnedMessage != null)
+            //{
+            //    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
 
-                if (chat.PinnedMessage != null)
-                    await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
-            }
+            //    if (chat.PinnedMessage != null)
+            //        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+            //}
 
-            LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
+            await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
                 $"@{from.Username} hat etwas verändert:\n_{oldValue}_\n⬇️\n{updateMessage.Text}", ParseMode.Markdown);
             
             await OnShowItems(update);
@@ -158,15 +171,15 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
             Guid id = await InsertItem(updateMessage.Chat.Id, updateMessage.From.Id, updateMessage.From.Username, updateMessage.Text);
 
-            if (LastPinnedMessage != null)
-            {
-                Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+            //if (LastPinnedMessage != null)
+            //{
+            //    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
 
-                if (chat.PinnedMessage != null)
-                    await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
-            }
+            //    if (chat.PinnedMessage != null)
+            //        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+            //}
 
-            LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
+            await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
                 $"@{from.Username} hat eine neue Opfergabe hinzugefügt:\n{updateMessage.Text}", ParseMode.Markdown);
 
             //T collectionItem = new T();
@@ -226,8 +239,13 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         Message? updateMessage = update.CallbackQuery?.Message ?? update.Message ?? update.ChannelPost;
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
 
+        if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+            return;
+
         if (from is null)
             return;
+
+        //await OnShowItems(update);
        
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id,
             $"Welche Opfergabe wird es bei dir {from.FirstName}?",
@@ -240,11 +258,15 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         AddMessages.Add(Bot, message);
     }
 
-    protected virtual async Task OnShowItems(Update update)
+    protected virtual async Task OnShowItems(Update update, bool force = false)
     {
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
+        User? from = update?.CallbackQuery?.From ?? updateMessage?.From;
 
-        if (updateMessage is null) 
+        if (from == null || updateMessage?.Chat == null || 
+            (updateMessage.Chat.Id != Bot.Config.FoyerChannelId &&
+             updateMessage.Chat.Id != Bot.Config.AdminChannelId &&
+             updateMessage.Chat.Type != ChatType.Private))
             return;
 
         //InlineKeyboardButton.WithCallbackData("hinzufugen", "add")
@@ -269,11 +291,41 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
                 sb.AppendLine($"- {item.Value}");
             }
         }
-        
-        if (ListMessageIds is null)
+
+        bool error = false;
+        foreach (var pair in ListMessageChatToMessageId)
         {
-            ListMessageIds = new Dictionary<string, int>();
-            
+            try
+            {
+                if (pair.Key.Equals(Bot.Config.FoyerChannelId))
+                {
+                    await Bot.EditMessageTextAsync(pair.Key, pair.Value, sb.ToString(),
+                        ParseMode.Markdown);
+                }
+                else
+                {
+                    await Bot.EditMessageTextAsync(pair.Key, pair.Value, sb.ToString(),
+                        ParseMode.Markdown, replyMarkup: InlineReplyMarkup);
+                }
+            }
+            catch (Exception)
+            {
+                error = true;
+            }
+        }
+
+        //if (force || error)
+        //{
+        //    Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, sb.ToString(),
+        //        ParseMode.Markdown, replyMarkup: InlineReplyMarkup);
+
+        //    await Bot.PinChatMessageAsync(updateMessage.Chat.Id, message.MessageId);
+
+        //    ListMessageChatToMessageId[updateMessage.Chat.Id] = message.MessageId;
+        //}
+
+        if (ListMessageChatToMessageId?.Count == 0)
+        {
             var message0 =
                 await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId, sb.ToString(),
                     ParseMode.Markdown, disableNotification: true, protectContent: true);
@@ -282,31 +334,58 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
                 await Bot.SendTextMessageAsync(Bot.Config.AdminChannelId, sb.ToString(),
                     ParseMode.Markdown, replyMarkup: InlineReplyMarkup, disableNotification: true, protectContent: true);
 
-            await Bot.SendTextMessageAsync(Bot.Config.AdminChannelId,
-                "*Neu:* Neue Opfergabe hinzufügen. (Bitte immer nur eine Sache angeben, z.B. \"Ein verschimmelter Kuchen\")\r\n" +
-                "*Bearbeiten:* Bereits hinzugefügte Opfergaben nochmal ändern." +
-                "\r\n*Entfernen:* Eine Opfergabe wieder entfernen.",
-                ParseMode.Markdown, disableNotification: true, protectContent: true);
-
-            ListMessageIds.Add("foyer", message0.MessageId);
-            ListMessageIds.Add("admin", message1.MessageId);
+            ListMessageChatToMessageId.Add(Bot.Config.FoyerChannelId, message0.MessageId);
+            ListMessageChatToMessageId.Add(Bot.Config.AdminChannelId, message1.MessageId);
 
             Settings!.ChatId = updateMessage.Chat.Id;
-            Settings.ListMessageIds = ListMessageIds;
-
-            Database.UpdateItem(Settings);
-
+            Settings.ListMessageChatIdToMessageId = _listMessageChatToMessageId;
+            
             await Bot.PinChatMessageAsync(Bot.Config.FoyerChannelId, message0.MessageId);
             //await Bot.PinChatMessageAsync(Bot.Config.AdminChannelId, message1.MessageId);
         }
-        else
-        {
-            await Bot.EditMessageTextAsync(Bot.Config.AdminChannelId, ListMessageIds["admin"], sb.ToString(),
-                ParseMode.Markdown, replyMarkup: InlineReplyMarkup);
 
-            await Bot.EditMessageTextAsync(Bot.Config.FoyerChannelId, ListMessageIds["foyer"], sb.ToString(),
-                ParseMode.Markdown);
+        if (updateMessage.Chat.Type == ChatType.Private &&
+            (force || error || ListMessageChatToMessageId?.ContainsKey(updateMessage.Chat.Id) != true))
+        {
+            string infoMessage =
+                "*Neu:* Neue Opfergabe hinzufügen. (Bitte immer nur eine Sache angeben, z.B. \"Ein verschimmelter Kuchen\")\r\n" +
+                "*Bearbeiten:* Bereits hinzugefügte Opfergaben nochmal ändern." +
+                "\r\n*Entfernen:* Eine Opfergabe wieder entfernen.";
+
+            await Bot.SendTextMessageAsync(updateMessage.Chat.Id, infoMessage, ParseMode.Markdown);
+
+            Message addMessage =
+                await Bot.SendTextMessageAsync(updateMessage.Chat.Id, sb.ToString(),
+                    ParseMode.Markdown, replyMarkup: InlineReplyMarkup);
+
+            await Bot.PinChatMessageAsync(updateMessage.Chat.Id, addMessage.MessageId);
+
+            if (!ListMessageChatToMessageId!.ContainsKey(updateMessage.Chat.Id))
+            {
+                ListMessageChatToMessageId.Add(updateMessage.Chat.Id, addMessage.MessageId);
+            }
+            else
+            {
+                ListMessageChatToMessageId[updateMessage.Chat.Id] = addMessage.MessageId;
+            }
+            //else
+            //{
+            //    messagesToEdit.Add();
+            //    messagesToEdit = _listMessageChatToMessageId[updateMessage.Chat.Id];
+            //}
         }
+
+        Database.UpdateItem(Settings!);
+    
+        //if (!firstItem)
+        //{
+        //    await Bot.EditMessageTextAsync(Bot.Config.AdminChannelId, _listMessageChatToMessageId["admin"], sb.ToString(),
+        //        ParseMode.Markdown, replyMarkup: InlineReplyMarkup);
+
+        //    await Bot.EditMessageTextAsync(Bot.Config.FoyerChannelId, _listMessageChatToMessageId["foyer"], sb.ToString(),
+        //        ParseMode.Markdown);
+        //}
+
 
         await Task.CompletedTask;
     }
@@ -315,6 +394,9 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
     {
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
+
+        if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+            return;
 
         if (from is null)
             return;
@@ -340,6 +422,8 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
         itemButtons.Add(InlineKeyboardButton.WithCallbackData("Abbrechen", "/collection_delete_cancel"));
 
+        //await OnShowItems(update);
+
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du hast es dir also nochmal anders überlegt {from.FirstName}? Na du wirst schon sehen was du davon hast WuhahAaha!!§!", ParseMode.Markdown,
             replyMarkup: new InlineKeyboardMarkup(itemButtons));
      
@@ -357,6 +441,9 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
 
+        if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+            return false;
+
         if (from is null)
             return false;
 
@@ -371,6 +458,8 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         {
             itemText = $"{item.Value.Substring(0, 60)}...";
         }
+
+        //await OnShowItems(update);
 
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id,
             $"Was möchtest du ändern {from.FirstName}?",
@@ -403,6 +492,9 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
 
+        if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+            return;
+
         if (from is null)
             return;
      
@@ -422,6 +514,8 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         }
 
         itemButtons.Add(InlineKeyboardButton.WithCallbackData("Abbrechen", "/collection_update_cancel"));
+
+        //await OnShowItems(update);
 
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du möchtest etwas ändern {from.FirstName}? Na ich hoffe für dich, dass du dein Opfer damit mindestens verdoppelst, MuhahaaAAhAH!!", ParseMode.Markdown,
             replyMarkup: new InlineKeyboardMarkup(itemButtons));

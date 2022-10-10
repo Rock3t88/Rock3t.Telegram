@@ -12,6 +12,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\GoogleController.cs" />
+    <Compile Remove="OAuth2Authenticator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="_DEBUG\config\wordlist.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

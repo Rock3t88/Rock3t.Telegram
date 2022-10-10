@@ -6,7 +6,7 @@ using Timer = System.Timers.Timer;
 // Source: https://www.codeproject.com/Articles/386911/Csharp-Easy-Extension-Properties
 namespace Rock3t.MetaProperties
 {
-    // =====================================================
+	// =====================================================
 	public interface IMetaProperty
 	{
 		string PropertyName { get; }
@@ -23,9 +23,9 @@ namespace Rock3t.MetaProperties
 	// =====================================================
 	public static class MetaPropertyExtender
 	{
-		public static IMetaPropertiesHolder GetMetaPropertiesHolder( object host )
+		public static IMetaPropertiesHolder GetMetaPropertiesHolder(object host)
 		{
-			return MetaPropertyWorker._GetMetaPropertiesHolder( host, false ); // No creation requested, can return null
+			return MetaPropertyWorker._GetMetaPropertiesHolder(host, false); // No creation requested, can return null
 		}
 
 		// --------------------------------------------------
@@ -64,38 +64,38 @@ namespace Rock3t.MetaProperties
 			return MetaPropertyWorker._ListMetaProperties( host );
 		}
 #else
-		public static void SetMetaProperty<T>( this object host, string propertyName, T value, bool autoDispose ) where T : class 
+		public static void SetMetaProperty<T>(this object host, string propertyName, T value, bool autoDispose) where T : class
 		{
-			MetaPropertyWorker._SetMetaProperty( host, propertyName, value, autoDispose );
+			MetaPropertyWorker._SetMetaProperty(host, propertyName, value, autoDispose);
 		}
-		public static void SetMetaProperty<T>( this object host, string propertyName, T value ) where T : class
+		public static void SetMetaProperty<T>(this object host, string propertyName, T value) where T : class
 		{
-			MetaPropertyWorker._SetMetaProperty( host, propertyName, value, true ); //autodispose:true
+			MetaPropertyWorker._SetMetaProperty(host, propertyName, value, true); //autodispose:true
 		}
-		public static object GetMetaProperty<T>( this object host, string propertyName ) where T : class
+		public static object GetMetaProperty<T>(this object host, string propertyName) where T : class
 		{
-			return MetaPropertyWorker._GetMetaProperty<T>( host, propertyName );
+			return MetaPropertyWorker._GetMetaProperty<T>(host, propertyName);
 		}
-		public static bool TryGetMetaProperty<T>( this object host, string propertyName, out T value ) where T : class
-        {
-			return MetaPropertyWorker._TryGetMetaProperty( host, propertyName, out value );
+		public static bool TryGetMetaProperty<T>(this object host, string propertyName, out T value) where T : class
+		{
+			return MetaPropertyWorker._TryGetMetaProperty(host, propertyName, out value);
 		}
 
-		public static bool HasMetaProperty( this object host, string propertyName )
+		public static bool HasMetaProperty(this object host, string propertyName)
 		{
-			return MetaPropertyWorker._HasMetaProperty( host, propertyName );
+			return MetaPropertyWorker._HasMetaProperty(host, propertyName);
 		}
-		public static IMetaProperty RemoveMetaProperty( this object host, string propertyName )
+		public static IMetaProperty RemoveMetaProperty(this object host, string propertyName)
 		{
-			return MetaPropertyWorker._RemoveMetaProperty( host, propertyName );
+			return MetaPropertyWorker._RemoveMetaProperty(host, propertyName);
 		}
-		public static void ClearMetaProperties( this object host )
+		public static void ClearMetaProperties(this object host)
 		{
-			MetaPropertyWorker._ClearMetaProperties( host );
+			MetaPropertyWorker._ClearMetaProperties(host);
 		}
-		public static List<string> ListMetaProperties( this object host )
+		public static List<string> ListMetaProperties(this object host)
 		{
-			return MetaPropertyWorker._ListMetaProperties( host );
+			return MetaPropertyWorker._ListMetaProperties(host);
 		}
 #endif
 		// --------------------------------------------------
@@ -106,21 +106,22 @@ namespace Rock3t.MetaProperties
 		{
 			return MetaPropertyWorker._TrackHolders;
 		}
-		public static bool TrackDisposableHosts( bool track )
+		public static bool TrackDisposableHosts(bool track)
 		{
 			bool r = MetaPropertyWorker._TrackHolders; MetaPropertyWorker._TrackHolders = track;
 			return r;
 		}
 
-		public static void StartCollector( int milliseconds )
+		public static void StartCollector(int milliseconds)
 		{
 			// Assuring the minimum timer interval...
 			milliseconds = milliseconds >= MinimalCollectorInterval ? milliseconds : MinimalCollectorInterval;
 
 			// Creating a timer if needed...
-			if( MetaPropertyWorker._Timer == null ) {
+			if (MetaPropertyWorker._Timer == null)
+			{
 				MetaPropertyWorker._Timer = new Timer();
-				MetaPropertyWorker._Timer.Elapsed += new ElapsedEventHandler( MetaPropertyWorker._TryCollectHolders );
+				MetaPropertyWorker._Timer.Elapsed += new ElapsedEventHandler(MetaPropertyWorker._TryCollectHolders);
 			}
 
 			// And always setting the interval and enabling the timer...
@@ -129,11 +130,12 @@ namespace Rock3t.MetaProperties
 		}
 		public static void StartCollector()
 		{
-			StartCollector( DefaultCollectorInterval );
+			StartCollector(DefaultCollectorInterval);
 		}
 		public static void StopCollector()
 		{
-			if( MetaPropertyWorker._Timer != null ) {
+			if (MetaPropertyWorker._Timer != null)
+			{
 				MetaPropertyWorker._Timer.Stop();
 				MetaPropertyWorker._Timer.Dispose();
 				MetaPropertyWorker._Timer = null;

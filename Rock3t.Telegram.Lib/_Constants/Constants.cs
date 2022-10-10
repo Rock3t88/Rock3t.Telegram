@@ -1,4 +1,4 @@
-﻿namespace Rock3t.Telegram.Lib;
+﻿namespace Rock3t.Telegram.Lib._Constants;
 
 public class Constants
 {

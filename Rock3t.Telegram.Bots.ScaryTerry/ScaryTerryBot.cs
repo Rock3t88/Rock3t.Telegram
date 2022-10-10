@@ -14,7 +14,7 @@ using Action = Rock3t.Telegram.Bots.ScaryTerry.Config.Action;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry;
 
-public class ScaryTerryBot : TelegramBot
+public class ScaryTerryBot : TelegramBotBase
 {
     private readonly Random _random = Random.Shared;
     private readonly ILogger<ScaryTerryBot> _logger;
@@ -96,6 +96,17 @@ public class ScaryTerryBot : TelegramBot
         LogConfiguration();
     }
 
+    protected override async void OnChatStarted(object? sender, Update update)
+    {
+        var collectionModule =
+            Modules.FirstOrDefault(
+                module => module is SacrificeCollectionModule) as SacrificeCollectionModule;
+
+        await collectionModule?.ShowItems(update);
+
+        base.OnChatStarted(sender, update);
+    }
+
     private async Task StartSacrifice(Update update)
     {
         Message? updateMessage = update.Message ?? update.ChannelPost;
@@ -107,7 +118,7 @@ public class ScaryTerryBot : TelegramBot
 
         await this.SendTextMessageAsync(Config.MainChatId,
             "*Soo ihr Würmchen, nun beginnen wir mal mit der Sammlung eurer Opfergaben!*\n\n" +
-            "Ihr könnte sie in meiner Gruppe der Opfergaben hinzufügen: https://t.me/+cj7dCxegrB0xNTFi\n\n" +
+            "Startet dazu einfach einen privaten Chat mir und gebt dort /start ein.\n" +
             "Außerdem gibt es einen Kanal, der euch über Änderungen informiert: https://t.me/+ZmVgwkFdEwxlY2Ni" +
             "\n\n" +
             "Um bis dahin nicht zu verhungern, habe ich auch schon eine hinzugefügt WuhahaHAhaHAaA!!!1!1!",

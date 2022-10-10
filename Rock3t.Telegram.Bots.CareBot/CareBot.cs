@@ -14,7 +14,7 @@ using File = System.IO.File;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
-public class CareBot : TelegramBot
+public class CareBot : TelegramBotBase
 {
     private readonly AboutMeDatabase _aboutMeDb;
     private readonly Dictionary<long, int> _aboutMeSteps;

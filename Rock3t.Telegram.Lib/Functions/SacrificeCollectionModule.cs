@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+using Rock3t.Telegram.Lib.Extensions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -36,6 +37,15 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
         bool retValue = false;
 
         Message? updateMessage = update.Message ?? update.CallbackQuery?.Message ?? update.ChannelPost;
+
+        if (updateMessage?.Chat == null || 
+            (updateMessage.Chat.Id != Bot.Config.AdminChannelId && 
+             updateMessage.Chat.Id != Bot.Config.FoyerChannelId && 
+             updateMessage.Chat.Type != ChatType.Private))
+        {
+            return false;
+        }
+
         User? from = update.CallbackQuery?.From ?? updateMessage?.From;
 
         if (update.Type == UpdateType.CallbackQuery && !string.IsNullOrWhiteSpace(update.CallbackQuery!.Data) &&
@@ -186,29 +196,51 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
 
     protected override void InitDefaultCommands()
     {
-        //CommandManager.AddAction("opfergaben", "Zeige alle Opfergaben", OnShowUserItems);
+        CommandManager.AddAction("opfergaben", "Zeige alle Opfergaben", async update =>
+        {
+            await OnShowItems(update, true);
+        });
         CommandManager.AddAction<string>("opfergabe", "Füge eine Opfergabe hinzu", async (update, strings) =>
         {
+            Message? updateMessage = update.GetUpdateMessage();
+
+            if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+                return;
+
             if (update.Message != null)
             {
                 AddMessages.Add(Bot, update.Message);
             }
             await OnAddListItems(update, strings);
-       
         });
-        CommandManager.AddAction("collection_show", "Show list items", OnShowItems, false);
+        CommandManager.AddAction("collection_show", "Show list items", update => OnShowItems(update), false);
         CommandManager.AddAction<string>("collection_add", "Add list item", async (update, strings) =>
         {
+            Message? updateMessage = update.GetUpdateMessage();
+
+            if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+                return;
+
             await OnAddListItems(update, strings);
           
         }, false);
         CommandManager.AddAction<string>("collection_delete_show", "Remove list item", async (update, strings) =>
         {
+            Message? updateMessage = update.GetUpdateMessage();
+          
+            if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+                return;
+
             await OnRemoveItems(update, strings);
            
         }, false);
         CommandManager.AddAction<string>("collection_update_show", "Update list item", async (update, strings) =>
         {
+            Message? updateMessage = update.GetUpdateMessage();
+
+            if (updateMessage?.Chat == null || (updateMessage.Chat.Id != Bot.Config.AdminChannelId && updateMessage.Chat.Type != ChatType.Private))
+                return;
+
             await OnUpdateItems(update, strings);
         }, false);
         //base.InitDefaultCommands();

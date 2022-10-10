@@ -11,12 +11,10 @@ namespace Rock3t.Telegram.Lib;
 
 
 
-public abstract class TelegramBot : TelegramBotClient, ITelegramBot
+public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
 {
     private CancellationToken _cancellationToken = CancellationToken.None;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
-
-    protected event EventHandler<Update>? ChatStarted;
 
     protected CommandManager CommandManager { get; }
     protected GameManager GameManager { get; }
@@ -29,7 +27,7 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     public bool IsRunning { get; private set; }
 
-    protected TelegramBot(string token) : base(token)
+    protected TelegramBotBase(string token) : base(token)
     {
         Modules = new List<IBotModule>();
 
@@ -40,7 +38,6 @@ public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 
     protected virtual async void OnChatStarted(object? sender, Update update)
     {
-        ChatStarted?.Invoke(this, update);
         await Task.CompletedTask;
     }
 

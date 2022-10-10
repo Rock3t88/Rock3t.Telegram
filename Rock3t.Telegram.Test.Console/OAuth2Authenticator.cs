@@ -4,7 +4,7 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
 using Newtonsoft.Json.Linq;
 
-namespace Rock3t.Telegram.WebApi
+namespace Rock3t.Telegram.Test.Console
 {
     public static class OAuth2Authenticator
     {

@@ -1,8 +1,9 @@
 ﻿using Akinator.Api.Net.Enumerations;
 using Microsoft.Extensions.Logging;
 using Rock3t.Telegram.Lib.Akinator;
-using Serilog;
+using Rock3t.Telegram.Lib.Extensions;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Rock3t.Telegram.Lib;
 
@@ -12,7 +13,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
     public Dictionary<AnswerOptions, string[]> PossibleAnswers { get; }
 
     public event EventHandler<IGame>? GameExited;
-    public TelegramBot Bot { get; }
+    public TelegramBotBase Bot { get; }
     public Message? LastMessage { get; set; }
     public Message? LastAnswer { get; set; }
     public bool Completed { get; private set; }
@@ -29,7 +30,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
         _logger = logger;
     }
 
-    public AkinatorGame(TelegramBot bot)
+    public AkinatorGame(TelegramBotBase bot)
     {
         PossibleAnswers = new Dictionary<AnswerOptions, string[]>();
 
@@ -91,11 +92,19 @@ public class AkinatorGame : IGame<ScaryAkinator>
 
     public async Task DoUpdates(Update update)
     {
-        if (update.Message?.From?.Id != Player.Id) return;
+        Message? updateMessage = update.GetUpdateMessage();
+
+        if (updateMessage?.Chat.Type != ChatType.Private)
+            return;
+
+        if (updateMessage.From?.Id != Player.Id) return;
 
         LastAnswer = update.Message;
 
-        var answerText = update.Message.Text.ToLower();
+        var answerText = updateMessage.Text?.ToLower();
+
+        if (string.IsNullOrWhiteSpace(answerText))
+            return;
 
         var answerOption = GetAnswerOption(answerText);
 
@@ -109,14 +118,14 @@ public class AkinatorGame : IGame<ScaryAkinator>
             {
                 Completed = true;
                 var message = Model.GetGuess().Result.FirstOrDefault()?.PhotoPath?.ToString() ?? "YEAAHH!!!";
-                await Bot.SendMessage(update.Message.Chat.Id, message);
+                await Bot.SendMessage(updateMessage.Chat.Id, message);
                 return;
             }
             else if (answerOption.Equals(AnswerOptions.No))
             {
                 Model.ResetGuess();
                 var message = Model.CurrentQuestion.Text;
-                await Bot.SendMessage(update.Message.Chat.Id, message);
+                await Bot.SendMessage(updateMessage.Chat.Id, message);
 
                 return;
             }
@@ -130,7 +139,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
         if (Model.GetGuessIsDue())
         {
             messageCallback = $"Ist es {Model.GetGuess().Result.FirstOrDefault()?.Name} ?";
-            await Bot.SendMessage(update.Message.Chat.Id, messageCallback);
+            await Bot.SendMessage(updateMessage.Chat.Id, messageCallback);
             return;
         }
 
@@ -139,7 +148,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
 
         var newQuestion = await Model.Answer(answerOption);
         messageCallback = newQuestion?.Text;
-        await Bot.SendMessage(update.Message.Chat.Id, messageCallback);
+        await Bot.SendMessage(updateMessage.Chat.Id, messageCallback);
 
         //if (answerOption.Equals(AnswerOptions.Yes))
         //{
