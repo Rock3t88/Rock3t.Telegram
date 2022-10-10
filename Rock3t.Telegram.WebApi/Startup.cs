@@ -1,5 +1,4 @@
-﻿using GoogleApi.Extensions;
-using Rock3t.Telegram.Bots.CareBot;
+﻿using Rock3t.Telegram.Bots.CareBot;
 using Rock3t.Telegram.Bots.ScaryTerry;
 using Rock3t.Telegram.Bots.ScaryTerry.Config;
 using Rock3t.Telegram.Lib;
@@ -22,7 +21,6 @@ public class Startup
         services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddGoogleApiClients();
         services.AddSwaggerGen();
         services.AddSingleton<CareBot>();
         services.AddSingleton<ScaryTerryBot>();

@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Rock3t.Telegram.Bots.ScaryTerry;
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 
 namespace Rock3t.Telegram.WebApi.Controllers;
 
@@ -30,13 +27,6 @@ public class ScaryTerryController : ControllerBase
     {
         var scaryTerryBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
         return scaryTerryBot;
-    }
-
-    [HttpPost("say")]
-    public async Task<Message?> Say(string text)
-    {
-        var scaryTerryBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
-        return await scaryTerryBot.SendTextMessageAsync(scaryTerryBot.Config.MainChatId, text, ParseMode.Markdown);
     }
 
     [HttpGet("start")]
