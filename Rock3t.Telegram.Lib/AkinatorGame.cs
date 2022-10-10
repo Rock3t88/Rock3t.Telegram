@@ -12,7 +12,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
     public Dictionary<AnswerOptions, string[]> PossibleAnswers { get; }
 
     public event EventHandler<IGame>? GameExited;
-    public TelegramBot Bot { get; }
+    public TelegramBotBase Bot { get; }
     public Message? LastMessage { get; set; }
     public Message? LastAnswer { get; set; }
     public bool Completed { get; private set; }
@@ -29,7 +29,7 @@ public class AkinatorGame : IGame<ScaryAkinator>
         _logger = logger;
     }
 
-    public AkinatorGame(TelegramBot bot)
+    public AkinatorGame(TelegramBotBase bot)
     {
         PossibleAnswers = new Dictionary<AnswerOptions, string[]>();
 

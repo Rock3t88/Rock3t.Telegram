@@ -14,7 +14,7 @@ using Action = Rock3t.Telegram.Bots.ScaryTerry.Config.Action;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry;
 
-public class ScaryTerryBot : TelegramBot
+public class ScaryTerryBot : TelegramBotBase
 {
     private readonly Random _random = Random.Shared;
     private readonly ILogger<ScaryTerryBot> _logger;
@@ -30,13 +30,11 @@ public class ScaryTerryBot : TelegramBot
 
     private ScaryTerryConfig _config => _options.Value;
 
-    public override BotConfig Config => _config;
-
     public Dictionary<long, TelegramUser> LoggedInUsers { get; set; } = new();
 
     private readonly Dictionary<long, string> _chatIdToService = new();
 
-    public ScaryTerryBot(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBot> logger) : base(options.Value.Token)
+    public ScaryTerryBot(IOptions<ScaryTerryConfig> options, ILogger<ScaryTerryBot> logger) : base(options.Value.Token, options.Value, logger)
     {
         _ha = new HomeAssistantWrapper(this);
         _logger = logger;
@@ -44,9 +42,10 @@ public class ScaryTerryBot : TelegramBot
         _helper = new();
         _randomActions = new List<Action>(_config.RandomActions);
 
-        _logger.LogInformation(Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ??
-                               Assembly.GetCallingAssembly()?.GetName()?.Version?.ToString() ?? 
-                               Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString() + "____1");
+        _logger.LogInformation(
+        Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ??
+               Assembly.GetCallingAssembly()?.GetName()?.Version?.ToString() ?? 
+               Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString() + "____1");
 
         _db = new ScaryTerryDb();
         _db.DatabaseFileName = "ScaryTerry.db";

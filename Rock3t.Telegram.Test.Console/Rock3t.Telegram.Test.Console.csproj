@@ -8,12 +8,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="OAuth2Authenticator.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="google-cred.json" />
     <None Remove="_DEBUG\config\appsettings.Development.json" />
     <None Remove="_DEBUG\config\appsettings.json" />
     <None Remove="_DEBUG\config\wordlist.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="google-cred.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
     <Content Include="_DEBUG\config\appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

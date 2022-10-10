@@ -14,7 +14,7 @@ using File = System.IO.File;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
-public class CareBot : TelegramBot
+public class CareBot : TelegramBotBase
 {
     private readonly AboutMeDatabase _aboutMeDb;
     private readonly Dictionary<long, int> _aboutMeSteps;
@@ -30,13 +30,11 @@ public class CareBot : TelegramBot
     private readonly IOptions<CareBotConfig> _options;
     private readonly ILogger<CareBot> _logger;
 
-    internal CareBotConfig _config { get; }
-
-    public override IBotConfig Config => _config;
+    internal CareBotConfig _config => (Config as CareBotConfig)!;
 
     public bool IsInitialized { get; private set; }
 
-    public CareBot(IOptions<CareBotConfig> options, ILogger<CareBot> logger) : base(options.Value.Token)
+    public CareBot(IOptions<CareBotConfig> options, ILogger<CareBot> logger) : base(options.Value.Token, options.Value, logger)
     {
         _aboutMeSteps = new Dictionary<long, int>();
 
@@ -44,7 +42,6 @@ public class CareBot : TelegramBot
 
         _logger = logger;
         _options = options;
-        _config = options.Value;
 
         _aboutMeDb = new AboutMeDatabase();
         //CommandManager.Commands.AddAction("lq", new CommandBase("lq", "List questions", async update =>
@@ -65,30 +62,6 @@ public class CareBot : TelegramBot
         //}));
      
         //ToDo: CommandManager.AddAction("aboutme", "Infotext", OnAboutMe);
-
-        if (_config.ClearUpdatesOnStart)
-        {
-            var clearUpdatesTask = this.GetUpdatesAsync();
-            
-            clearUpdatesTask.Wait();
-            var updates = clearUpdatesTask.Result;
-
-            int? offset = null;
-
-            if (updates.Length > 0)
-            {
-            
-                logger.LogWarning("Missed updates: ");
-                foreach (Update update in updates)
-                {
-                    offset = update.Id;
-                    var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
-                    _logger.LogWarning(jsonString);
-                }
-
-                this.GetUpdatesAsync(offset + 1).Wait();
-            }
-        }
 
         JoinQuestions = options.Value.Questions;
 

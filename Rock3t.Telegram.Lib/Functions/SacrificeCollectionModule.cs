@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+using Rock3t.Telegram.Lib.Extensions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -81,13 +82,13 @@ public sealed class SacrificeCollectionModule : CollectionModuleBase<CollectionM
                 }
                 await RemoveItem(guid);
 
-                if (LastPinnedMessage != null)
-                {
-                    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+                //if (LastPinnedMessage != null)
+                //{
+                //    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
 
-                    if (chat.PinnedMessage != null)
-                        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
-                }
+                //    if (chat.PinnedMessage != null)
+                //        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+                //}
 
                 LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
                     $"@{from.Username} hat etwas entfernt:\n{itemToDelete}", ParseMode.Markdown);

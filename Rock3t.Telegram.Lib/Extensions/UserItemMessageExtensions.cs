@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Rock3t.Telegram.Lib;
+namespace Rock3t.Telegram.Lib.Extensions;
 
 public static class UserItemMessageExtensions
 {

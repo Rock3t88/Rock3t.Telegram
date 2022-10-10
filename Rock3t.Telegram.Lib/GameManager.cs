@@ -44,7 +44,7 @@ public class GameManager
             _games.Remove(gameType);
     }
 
-    public IGame Create(Type gameType, User user, TelegramBot bot)
+    public IGame Create(Type gameType, User user, TelegramBotBase bot)
     {
         //game = game.ToLower();
 
