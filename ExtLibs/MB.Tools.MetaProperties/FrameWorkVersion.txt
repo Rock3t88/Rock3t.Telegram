@@ -1,0 +1,13 @@
+﻿CONDITIONAL SYMBOLS TO COMPILE DEPENDING UPON THE FRAMEWORK VERSION
+===================================================================
+
+In the ".csproj" file of the project you wish the conditional symbols to be available, include after any other
+PropertyGroup section (to avoid interferences with VS modifying the existing ones), the following lines:
+
+<PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'v2.0'"> <DefineConstants>$(DefineConstants);NET20</DefineConstants> </PropertyGroup>
+<PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'v3.0'"> <DefineConstants>$(DefineConstants);NET30</DefineConstants> </PropertyGroup>
+<PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'v3.5'"> <DefineConstants>$(DefineConstants);NET35</DefineConstants> </PropertyGroup>
+<PropertyGroup Condition="'$(TargetFrameworkVersion)' == 'v4.0'"> <DefineConstants>$(DefineConstants);NET40</DefineConstants> </PropertyGroup>
+
+This will generate the appropriate NET20, NET30, NET35, or NET40 symbol depending upon the .NET framework used, preserving
+the symbols that might be already defined in the other sections.
