@@ -14,8 +14,4 @@
     <PackageReference Include="Telegram.Bot" Version="18.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Rock3t.MetaProperties\Rock3t.MetaProperties.csproj" />
-  </ItemGroup>
-
 </Project>

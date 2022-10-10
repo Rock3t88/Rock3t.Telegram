@@ -13,11 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rock3t.Telegram.Bots.CareBo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rock3t.Telegram.Bots.ScaryTerry", "Rock3t.Telegram.Bots.ScaryTerry\Rock3t.Telegram.Bots.ScaryTerry.csproj", "{594E33B8-F441-4A59-B2C2-B0AAB633276D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rock3t.Telegram.Bots.StatsBot", "StatsBot\Rock3t.Telegram.Bots.StatsBot.csproj", "{1A0F28D1-E223-4E80-9B7D-18462491C544}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_ExtLibs", "_ExtLibs", "{B93FBDC9-259F-4A3F-8505-D07898298145}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rock3t.MetaProperties", "Rock3t.MetaProperties\Rock3t.MetaProperties.csproj", "{3B7263BF-6892-43C6-88A3-F90F00961680}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rock3t.Telegram.Bots.StatsBot", "StatsBot\Rock3t.Telegram.Bots.StatsBot.csproj", "{1A0F28D1-E223-4E80-9B7D-18462491C544}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,10 +45,6 @@ Global
 		{1A0F28D1-E223-4E80-9B7D-18462491C544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A0F28D1-E223-4E80-9B7D-18462491C544}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A0F28D1-E223-4E80-9B7D-18462491C544}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B7263BF-6892-43C6-88A3-F90F00961680}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B7263BF-6892-43C6-88A3-F90F00961680}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B7263BF-6892-43C6-88A3-F90F00961680}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B7263BF-6892-43C6-88A3-F90F00961680}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

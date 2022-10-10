@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Rock3t.MetaProperties;
-using Rock3t.Telegram.Lib.Commands;
-using Rock3t.Telegram.Lib.Extensions;
+﻿using Rock3t.Telegram.Lib.Commands;
 using Rock3t.Telegram.Lib.Functions;
 using Telegram.Bot;
 using Telegram.Bot.Requests.Abstractions;
@@ -15,7 +11,7 @@ namespace Rock3t.Telegram.Lib;
 
 
 
-public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
+public abstract class TelegramBot : TelegramBotClient, ITelegramBot
 {
     private CancellationToken _cancellationToken = CancellationToken.None;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -27,57 +23,19 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
 
     public List<IBotModule> Modules { get; }
 
-    public IBotConfig Config { get; }
+    public abstract IBotConfig Config { get; }
 
     public Message? LastMessage { get; private set; }
 
     public bool IsRunning { get; private set; }
 
-    protected TelegramBotBase(string token, IBotConfig config, ILogger logger) : base(token)
+    protected TelegramBot(string token) : base(token)
     {
-        Config = config;
         Modules = new List<IBotModule>();
 
         CommandManager = new CommandManager(this);
-        CommandManager.AddAction("zufall", "Würfelt eine zahl zwischen 1 und 6", OnRandom);
-
         CommandManager.ChatStarted += OnChatStarted;
         GameManager = new GameManager();
-
-        if (Config.ClearUpdatesOnStart)
-        {
-            var clearUpdatesTask = this.GetUpdatesAsync();
-
-            clearUpdatesTask.Wait();
-            var updates = clearUpdatesTask.Result;
-
-            int? offset = null;
-
-            if (updates.Length > 0)
-            {
-
-                logger.LogWarning("Missed updates: ");
-                foreach (Update update in updates)
-                {
-                    offset = update.Id;
-                    var jsonString = JsonConvert.SerializeObject(update, Formatting.Indented);
-                    logger.LogWarning(jsonString);
-                }
-
-                this.GetUpdatesAsync(offset + 1).Wait();
-            }
-        }
-
-    }
-
-    protected virtual async Task OnRandom(Update update)
-    {
-        Message? message = update.GetUpdateMessage();
-
-        if (message == null)
-            return;
-
-        await this.SendDiceAsync(message.Chat.Id, cancellationToken: _cancellationToken);
     }
 
     protected virtual async void OnChatStarted(object? sender, Update update)
@@ -188,7 +146,6 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
 
     private async Task OnUpdate(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        update.SetMetaProperty(MetaProperties.Bot, this, true);
         await OnUpdate(update);
         await Task.CompletedTask;
     }

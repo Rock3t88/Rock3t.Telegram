@@ -2,7 +2,6 @@
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Text;
-using Rock3t.Telegram.Lib.Extensions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -137,13 +136,13 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
             await Task.FromResult(Database.UpdateItem(item));
 
-            //if (LastPinnedMessage != null)
-            //{
-            //    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+            if (LastPinnedMessage != null)
+            {
+                Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
 
-            //    if (chat.PinnedMessage != null)
-            //        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
-            //}
+                if (chat.PinnedMessage != null)
+                    await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+            }
 
             LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
                 $"@{from.Username} hat etwas verändert:\n_{oldValue}_\n⬇️\n{updateMessage.Text}", ParseMode.Markdown);
@@ -159,13 +158,13 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
             Guid id = await InsertItem(updateMessage.Chat.Id, updateMessage.From.Id, updateMessage.From.Username, updateMessage.Text);
 
-            //if (LastPinnedMessage != null)
-            //{
-            //    Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
+            if (LastPinnedMessage != null)
+            {
+                Chat chat = await Bot.GetChatAsync(Bot.Config.MainChatId);
 
-            //    if (chat.PinnedMessage != null)
-            //        await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
-            //}
+                if (chat.PinnedMessage != null)
+                    await Bot.UnpinChatMessageAsync(chat.Id, chat.PinnedMessage.MessageId);
+            }
 
             LastPinnedMessage = await Bot.SendTextMessageAsync(Bot.Config.FoyerChannelId,
                 $"@{from.Username} hat eine neue Opfergabe hinzugefügt:\n{updateMessage.Text}", ParseMode.Markdown);
@@ -231,10 +230,10 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
             return;
        
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id,
-            $"Welche Opfergabe wird es bei dir @{from.Username}?",
+            $"Welche Opfergabe wird es bei dir {from.FirstName}?",
             replyMarkup: new ForceReplyMarkup
             {
-                InputFieldPlaceholder = "Vielleicht etwas Gehirnmasse?", Selective = true
+                InputFieldPlaceholder = "Vielleicht etwas Gehirnmasse?", 
             });
 
         //AddUserItemMessage(message);
@@ -341,7 +340,7 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
         itemButtons.Add(InlineKeyboardButton.WithCallbackData("Abbrechen", "/collection_delete_cancel"));
 
-        Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du hast es dir also nochmal anders überlegt @{from.Username}? Na du wirst schon sehen was du davon hast WuhahAaha!!§!", ParseMode.Markdown,
+        Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du hast es dir also nochmal anders überlegt {from.FirstName}? Na du wirst schon sehen was du davon hast WuhahAaha!!§!", ParseMode.Markdown,
             replyMarkup: new InlineKeyboardMarkup(itemButtons));
      
         //AddUserItemMessage(message);
@@ -374,10 +373,10 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
         }
 
         Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id,
-            $"Was möchtest du ändern @{from.Username}?",
+            $"Was möchtest du ändern {from.FirstName}?",
             replyMarkup: new ForceReplyMarkup
             {
-                InputFieldPlaceholder = $"{itemText}", Selective = true
+                InputFieldPlaceholder = $"{itemText}"
             });
 
         EditMessages.Add(Bot, message, guid);
@@ -424,7 +423,7 @@ public abstract class CollectionModuleBase<T> : BotModuleBase where T : ITelegra
 
         itemButtons.Add(InlineKeyboardButton.WithCallbackData("Abbrechen", "/collection_update_cancel"));
 
-        Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du möchtest etwas ändern @{from.Username}? Na ich hoffe für dich, dass du dein Opfer damit mindestens verdoppelst, MuhahaaAAhAH!!", ParseMode.Markdown,
+        Message message = await Bot.SendTextMessageAsync(updateMessage.Chat.Id, $"Du möchtest etwas ändern {from.FirstName}? Na ich hoffe für dich, dass du dein Opfer damit mindestens verdoppelst, MuhahaaAAhAH!!", ParseMode.Markdown,
             replyMarkup: new InlineKeyboardMarkup(itemButtons));
 
         EditMessages.Add(Bot, message);

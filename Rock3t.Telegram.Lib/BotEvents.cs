@@ -2,9 +2,9 @@
 
 public class BotEvents
 {
-    private TelegramBotBase _bot;
+    private TelegramBot _bot;
 
-    public BotEvents(TelegramBotBase bot)
+    public BotEvents(TelegramBot bot)
     {
         _bot = bot;
     }
