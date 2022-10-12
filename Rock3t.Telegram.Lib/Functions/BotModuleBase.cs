@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using Microsoft.VisualBasic;
 using Rock3t.Telegram.Lib.Commands;
+using Rock3t.Telegram.Lib.LiteDB;
+using Serilog;
 using Telegram.Bot.Types;
 
 namespace Rock3t.Telegram.Lib.Functions;
@@ -22,7 +24,7 @@ public abstract class BotModuleBase : IBotModule
     public ITelegramBot Bot { get; }
     public abstract Guid Id { get; }
     public string Name { get; } 
-
+    
     public CommandManager CommandManager { get; }
 
     public IReadOnlyCollection<IBotModule> SubModules => _subModules.Values.ToImmutableList();

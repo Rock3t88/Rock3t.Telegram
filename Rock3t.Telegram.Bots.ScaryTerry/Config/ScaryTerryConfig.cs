@@ -1,10 +1,15 @@
 ﻿using Rock3t.Telegram.Lib;
+using Rock3t.Telegram.Lib.Functions;
 
 namespace Rock3t.Telegram.Bots.ScaryTerry.Config;
 
-public class ScaryTerryConfig : BotConfig
+public class ScaryTerryConfig : BotConfig, IHasModuleConfig<RandomTalkModuleConfig>
 {
+    private SacrificeCollectionModule _module;
+
     public string Title { get; set; }
+    public RandomTalkModuleConfig Module { get; set; }
+        
     public string DefaultWelcomeMessage { get; set; }
     public string DefaultMessage { get; set; }
     public string DefaultRecipientMessage { get; set; }
@@ -16,9 +21,12 @@ public class ScaryTerryConfig : BotConfig
     public List<Notifier> Notifiers { get; set; } = new();
     public List<string> WelcomeMessages { get; set; } = new();
 
+    //public List<string> Poems { get; set; }
+    //public List<string> Facts { get; set; }
+
     public ScaryTerryConfig()
     {
-
+        
     }
 
     //public static ScaryTerryConfig Load(string fileName = "Config\\Config.yml")

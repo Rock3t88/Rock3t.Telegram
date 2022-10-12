@@ -11,6 +11,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using YamlDotNet.Serialization;
 using File = System.IO.File;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Rock3t.Telegram.Bots.CareBot;
 
@@ -32,6 +33,7 @@ public class CareBot : TelegramBotBase
 
     internal CareBotConfig _config { get; }
 
+    public override ILogger Logger => _logger;
     public override IBotConfig Config => _config;
 
     public bool IsInitialized { get; private set; }

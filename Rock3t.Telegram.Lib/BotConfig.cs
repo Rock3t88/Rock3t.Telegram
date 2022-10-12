@@ -14,6 +14,7 @@ public interface IBotConfig
 public class BotConfig : IBotConfig
 {
     //public string Name { get; set; }
+
     public virtual string Name
     {
         get

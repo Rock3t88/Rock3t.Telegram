@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Rock3t.Telegram.Bots.ScaryTerry;
+using Rock3t.Telegram.Lib.Functions;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace Rock3t.Telegram.WebApi.Controllers;
 
@@ -27,6 +31,30 @@ public class ScaryTerryController : ControllerBase
     {
         var scaryTerryBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
         return scaryTerryBot;
+    }
+
+    [HttpGet("send")]
+    public async Task<Message> Send(string text)
+    {
+        var scaryTerryBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
+        return await scaryTerryBot.SendTextMessageAsync(scaryTerryBot.Config.MainChatId, text, ParseMode.Markdown);
+    }
+
+    [HttpGet("initpoeminfo")]
+    public void InitPoemInfo()
+    {
+        var scaryTerryBot = App.Host.Services.GetRequiredService<ScaryTerryBot>();
+     
+        Timer timer = new Timer(async state =>
+        {
+            if (state is ScaryTerryBot bot)
+            {
+                string text =
+                    "Wusstet ihr, dass ich einige Halloweengedichte kenne? Ihr könnt mich ja mal danach Fragen, wuhaHAhahA!!1!";
+
+                await bot.SendTextMessageAsync(bot.Config.MainChatId, text, ParseMode.Markdown);
+            }
+        }, scaryTerryBot, 3000, Timeout.Infinite);
     }
 
     [HttpGet("start")]

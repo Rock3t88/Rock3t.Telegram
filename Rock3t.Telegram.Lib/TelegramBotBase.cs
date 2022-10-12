@@ -1,5 +1,7 @@
-﻿using Rock3t.Telegram.Lib.Commands;
+﻿using Microsoft.Extensions.Logging;
+using Rock3t.Telegram.Lib.Commands;
 using Rock3t.Telegram.Lib.Functions;
+using Rock3t.Telegram.Lib.LiteDB;
 using Telegram.Bot;
 using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
@@ -15,11 +17,15 @@ public abstract class TelegramBotBase : TelegramBotClient, ITelegramBot
 {
     private CancellationToken _cancellationToken = CancellationToken.None;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CommonFileDatabase _database;
+    public abstract ILogger Logger { get; }
 
     protected CommandManager CommandManager { get; }
     protected GameManager GameManager { get; }
 
     public List<IBotModule> Modules { get; }
+
+    public CommonFileDatabase Database { get; protected set; }
 
     public abstract IBotConfig Config { get; }
 

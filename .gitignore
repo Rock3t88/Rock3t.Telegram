@@ -350,3 +350,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /Rock3t.Telegram.WebApi/db
+/Rock3t.Telegram.WebApi/opfergaben.db/db

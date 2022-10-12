@@ -30,6 +30,8 @@ public class ScaryTerryBot : TelegramBotBase
 
     private ScaryTerryConfig _config => _options.Value;
 
+    public override ILogger Logger => _logger;
+
     public override BotConfig Config => _config;
 
     public Dictionary<long, TelegramUser> LoggedInUsers { get; set; } = new();
@@ -52,8 +54,12 @@ public class ScaryTerryBot : TelegramBotBase
         _db.DatabaseFileName = "ScaryTerry.db";
         _db.DatabaseFilePath = "./db";
 
+        Database = _db;
+
+        Modules.Add(new RandomTalkModule(this, "random_talk"));
         Modules.Add(new SacrificeCollectionModule(this, "opfergaben"));
-        
+        Modules.Add(new WikiModule(this, "wiki"));
+
         CommandManager.AddAction("start_sacrifice", "Beginnt mit der Sammlung der Opfergaben", StartSacrifice, false);
 
         var triggeredWelcomes = _db.GetWelcomeMessages(true);
@@ -171,6 +177,9 @@ public class ScaryTerryBot : TelegramBotBase
 
                 if (!moduleExecuted)
                     moduleExecuted = result;
+
+                if (moduleExecuted) 
+                    break;
             }
 
             _logger.LogDebug($"{{{nameof(moduleExecuted)}}}:", moduleExecuted);

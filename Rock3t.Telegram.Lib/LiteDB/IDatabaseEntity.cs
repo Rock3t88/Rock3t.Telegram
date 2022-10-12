@@ -9,6 +9,11 @@ public interface ITelegramCollectionEntity : IDatabaseEntity
     string Value { get; set; }
 }
 
+public interface INamedDatabaseEntity : IDatabaseEntity
+{
+    string? Name { get; set; }
+}
+
 public interface IDatabaseEntity
 {
     Guid Id { get; set; }
