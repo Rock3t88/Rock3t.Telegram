@@ -12,6 +12,7 @@ namespace Rock3t.Telegram.Lib.Functions;
 public class WikiModule : BotModuleBase
 {
     private readonly CommonFileDatabase _fileDatabase;
+    private readonly CommonFileDatabase _sentWikiArticles;
     private readonly Wiki _wiki;
 
     public WikiModule(ITelegramBot bot, string name) : base(bot, name)
@@ -20,6 +21,11 @@ public class WikiModule : BotModuleBase
         {
             DatabaseFilePath = "./db",
             DatabaseFileName = "nouns.db"
+        };
+        _sentWikiArticles = new()
+        {
+            DatabaseFilePath = "./db",
+            DatabaseFileName = "sentWikiArticles.db"
         };
 
         _wiki = new Wiki();
@@ -88,11 +94,26 @@ public class WikiModule : BotModuleBase
 
             int rnd = Random.Shared.Next(0, 11);
 
-            if (wikiAnswer.ImageUri != null && rnd >= 8)
-                await Bot.SendPhotoAsync(updateMessage.Chat.Id, new InputOnlineFile(wikiAnswer.ImageUri), wikiAnswer.ImageCaption);
-            else
+            if (wikiAnswer.ImageUri != null && rnd >= 8 && _sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.ImageUri.ToString())) == null)
+            {
+                await Bot.SendPhotoAsync(updateMessage.Chat.Id, new InputOnlineFile(wikiAnswer.ImageUri),
+                    wikiAnswer.ImageCaption);
+                
+                await Task.FromResult(_sentWikiArticles.InsertItem(new StringEntity
+                    { Name = "SentWikiArticle", Value = wikiAnswer.ImageUri.ToString() }));
+                
+                return true;
+            }
+            else if (_sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.Text)) == null)
+            {
                 await Bot.SendTextMessageAsync(updateMessage.Chat.Id, wikiAnswer.Text, ParseMode.Html);
-            return true;
+                await Task.FromResult(_sentWikiArticles.InsertItem(new StringEntity { Name = "SentWikiArticle", Value = wikiAnswer.Text }));
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         return false;
