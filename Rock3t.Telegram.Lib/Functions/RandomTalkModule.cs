@@ -29,9 +29,12 @@ public class RandomTalkModule : BotModuleBase
         DateTime now = DateTime.UtcNow;
 
         var newTime = DateTime.Today
-            .AddHours(Random.Shared.Next(now.Hour, 22))
-            .AddMinutes(Random.Shared.Next(now.Minute, 60))
-            .AddSeconds(Random.Shared.Next(now.Second, 60));
+            .AddHours(now.Hour)
+            .AddMinutes(now.Minute)
+            .AddSeconds(now.Second + 10);
+        //.AddHours(Random.Shared.Next(now.Hour, 22))
+        //.AddMinutes(Random.Shared.Next(now.Minute, 60))
+        //.AddSeconds(Random.Shared.Next(now.Second, 60));
 
         _timer = new Timer(OnTime, this, 
             (int)(newTime - now).TotalMilliseconds, Timeout.Infinite);
