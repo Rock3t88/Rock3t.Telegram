@@ -35,7 +35,7 @@ public class WikiModule : BotModuleBase
         if (updateMessage?.Chat.Id == null || string.IsNullOrWhiteSpace(text))
             return false;
 
-        if (!text.Contains("@scary_terry_dev_bot") && updateMessage?.ReplyToMessage?.From?.IsBot != true)
+        if (!text.Contains("@scary_terry_the_bot") && updateMessage?.ReplyToMessage?.From?.IsBot != true)
             return false;
 
         NounEntity? nounEntity = null;

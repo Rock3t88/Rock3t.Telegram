@@ -8,12 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ScarryTerry.db" />
     <None Remove="_DEBUG\config\appsettings.Development.json" />
     <None Remove="_DEBUG\config\appsettings.json" />
     <None Remove="_DEBUG\config\wordlist.txt" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="ScarryTerry.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="_DEBUG\config\appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>

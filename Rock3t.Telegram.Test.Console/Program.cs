@@ -12,6 +12,13 @@ using Rock3t.Telegram.Lib.LiteDB;
 using Rock3t.Telegram.Lib.Resources;
 using Rock3t.Telegram.Test.Console;
 
+CommonFileDatabase fileDatabase = new CommonFileDatabase();
+fileDatabase.DatabaseFilePath = "./";
+fileDatabase.DatabaseFileName = "ScarryTerry.db";
+
+var items = fileDatabase.GetItems<StringEntity>();
+var items1 = fileDatabase.GetItems<StringEntity>().Where(x => x.Name?.Equals("SentPoems") == true).ToList();
+var items2 = fileDatabase.GetItems<StringEntity>().Where(x => x.Name?.Equals("SentFacts") == true).ToList();
 
 
 //var rabbitItem = rabbitEntity.FirstOrDefault();
