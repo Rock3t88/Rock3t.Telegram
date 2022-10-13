@@ -57,7 +57,7 @@ public class RandomTalkModule : BotModuleBase
     {
         if (state is RandomTalkModule module)
         {
-            await SendFact(module.Bot.Config.MainChatId);
+            await module.SendFact(module.Bot.Config.MainChatId);
 
             DateTime now = DateTime.UtcNow;
             DateTime newTime;
@@ -94,7 +94,7 @@ public class RandomTalkModule : BotModuleBase
 
             module.Bot.Logger.LogInformation("New time to execute random fact: {newTime}", newTime);
 
-            _timer.Change((int)(newTime - DateTime.Now).TotalMilliseconds, Timeout.Infinite);
+            module._timer.Change((int)(newTime - DateTime.Now).TotalMilliseconds, Timeout.Infinite);
         }
     }
     
