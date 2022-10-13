@@ -82,10 +82,15 @@ public class WikiModule : BotModuleBase
         }
         else if (words.Contains("blödsinn"))
         {
-            wikiAnswer = await _wiki.SearchAsync("doof");
+            wikiAnswer = await _wiki.SearchAsync("blödsinn");
         }
-
+        else if (words.Contains("interessant"))
+        {
+            wikiAnswer = await _wiki.SearchAsync("interessant");
+        }
         //var test = _fileDatabase.GetItems<NounEntity>().Where(n => words.Contains(n.Name.ToLower()));
+
+        var sentWikiArticle = _sentWikiArticles.GetItems<StringEntity>();
 
         if (wikiAnswer != null)
         {
@@ -94,20 +99,23 @@ public class WikiModule : BotModuleBase
 
             int rnd = Random.Shared.Next(0, 11);
 
-            if (wikiAnswer.ImageUri != null && rnd >= 8 && _sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.ImageUri.ToString())) == null)
+            var i = _sentWikiArticles.GetItems<StringEntity>()
+                .FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.Text));
+
+            if (wikiAnswer.ImageUri != null && rnd >= 7 && _sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.ImageUri.ToString().GetHashCode().ToString())) == null)
             {
                 await Bot.SendPhotoAsync(updateMessage.Chat.Id, new InputOnlineFile(wikiAnswer.ImageUri),
                     wikiAnswer.ImageCaption);
                 
                 await Task.FromResult(_sentWikiArticles.InsertItem(new StringEntity
-                    { Name = "SentWikiArticle", Value = wikiAnswer.ImageUri.ToString() }));
+                    { Name = "SentWikiArticle", Value = wikiAnswer.ImageUri.ToString().GetHashCode().ToString() }));
                 
                 return true;
             }
-            else if (_sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.Text)) == null)
+            else if (_sentWikiArticles.GetItems<StringEntity>().FirstOrDefault(entity => entity.Value.Equals(wikiAnswer.Text.GetHashCode().ToString())) == null)
             {
                 await Bot.SendTextMessageAsync(updateMessage.Chat.Id, wikiAnswer.Text, ParseMode.Html);
-                await Task.FromResult(_sentWikiArticles.InsertItem(new StringEntity { Name = "SentWikiArticle", Value = wikiAnswer.Text }));
+                await Task.FromResult(_sentWikiArticles.InsertItem(new StringEntity { Name = "SentWikiArticle", Value = wikiAnswer.Text.GetHashCode().ToString() }));
                 return true;
             }
             else

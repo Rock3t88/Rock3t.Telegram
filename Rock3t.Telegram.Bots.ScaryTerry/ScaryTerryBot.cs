@@ -418,7 +418,7 @@ public class ScaryTerryBot : TelegramBotBase
                 _logger.LogDebug("Telegram event received.  Current user: {0} ({1}); message: {2}",
                     currentUser?.Name, currentUser?.UserId, text);
 
-                if (text?.Contains(botname) != true)
+                if (text?.Contains(botname) != true && updateMessage?.ReplyToMessage?.From?.IsBot != true)
                     return;
 
                 action = GetInlineCommandAction(text);
