@@ -48,10 +48,9 @@ public class Wiki
 
         WikiAnswer answer = new WikiAnswer(answerText);
 
-
         var thumbimage = imgs.FirstOrDefault(node => node.Attributes["class"]?.Value.Contains("thumbimage") == true);
 
-        if (thumbimage != null)
+        if (thumbimage != null && !string.IsNullOrWhiteSpace(thumbimage.Attributes["src"]?.Value))
         {
             string? imageUri = thumbimage.Attributes["src"]?.Value;
 
