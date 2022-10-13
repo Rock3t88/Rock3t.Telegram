@@ -94,7 +94,7 @@ public class RandomTalkModule : BotModuleBase
 
             module.Bot.Logger.LogInformation("New time to execute random fact: {newTime}", newTime);
 
-            module._timer.Change((int)(newTime - DateTime.Now).TotalMilliseconds, Timeout.Infinite);
+            module._timer.Change((int)(newTime - now).TotalMilliseconds, Timeout.Infinite);
         }
     }
     
