@@ -26,7 +26,7 @@ public class RandomTalkModule : BotModuleBase
 
     public RandomTalkModule(ITelegramBot bot, string name) : base(bot, name)
     {
-        DateTime now = DateTime.UtcNow;
+        DateTime now = DateTime.Now;
 
         var newTime = DateTime.Today
             .AddHours(now.Hour)
@@ -59,7 +59,7 @@ public class RandomTalkModule : BotModuleBase
         {
             await module.SendFact(module.Bot.Config.MainChatId);
 
-            DateTime now = DateTime.UtcNow;
+            DateTime now = DateTime.Now;
             DateTime newTime;
 
             if (now.Hour <= 14)
